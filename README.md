@@ -49,10 +49,37 @@ The book is a boundary and reference, not training data checked into this
 repository.  Fixtures here are independently written numeric cases, with a
 single well-known Mendel calculation used as a regression check.
 
+## Wasserman bootstrap model acceptance
+
+[`wasserman_bootstrap_cases.jsonl`](wasserman_bootstrap_cases.jsonl) contains
+small prompt-to-oracle cases derived from the linked Normal Deviate bootstrap and
+subsampling posts.  They test formula and interpretation boundaries rather than
+prose similarity: pivotal interval endpoint order, the empirical bootstrap CDF,
+with- versus without-replacement resampling, finite-B Monte Carlo error,
+bootstrap validity, subsampling scaling, the `b_n` asymptotic regime, and
+frequentist coverage interpretation.
+
+A model runner should emit one JSON object per case in this form:
+
+```json
+{"id":"bootstrap_basic_interval_endpoint_order","answer":{"method":"basic_bootstrap","interval":[9.7,10.2]}}
+```
+
+Then check the complete sweep with:
+
+```sh
+python3 check_wasserman_bootstrap.py model_answers.jsonl
+```
+
+The checker accepts declared numerical tolerances, requires every case exactly
+once, and prints `PASS`, `FAIL`, and a final `RESULT`.  It does not call a model
+or the network.  These are model-facing acceptance oracles; they do not imply
+that bootstrap or subsampling is implemented in `econometrician.py` yet.
+
 ## Sources and next methods
 
 [WASSERMAN.md](WASSERMAN.md) links and summarizes five Normal Deviate posts on
 bootstrap, subsampling, randomized computation, permutation tests, and
 Bayesian/frequentist interpretation. It also links the book's bootstrap chapter
-and records the source-reuse decisions. The proposed resampling capabilities
-are not yet implemented; the current executable remains the chi-square slice.
+and records the source-reuse decisions. The current statistical executable
+remains the chi-square slice.
