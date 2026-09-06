@@ -1,8 +1,8 @@
 # Wasserman: sources for econometrician-in-a-box
 
 Reviewed: 2026-09-06. These are original source notes, not mirrored articles.
-The implementation directions below are project proposals, not claims that the
-corresponding methods are already implemented.
+Implementation statements below distinguish the small checked conformance slice
+from broader methods that remain proposals.
 
 ## What was already present
 
@@ -24,7 +24,7 @@ Larry Wasserman, *All of Statistics: A Concise Course in Statistical Inference*,
 Springer, first edition, copyright 2004.
 [Publisher record](https://link.springer.com/book/10.1007/978-0-387-21736-9).
 
-For the next uncertainty-estimation slice, add
+For uncertainty-estimation work, use
 [Chapter 8, The Bootstrap, pp. 107–118](https://link.springer.com/chapter/10.1007/978-0-387-21736-9_8)
 as a reference alongside the chi-square sections. The publisher record identifies
 the book as subscription content with Springer copyright; no permission to
@@ -122,26 +122,45 @@ Project implication: distinguish confidence intervals from credible intervals
 in the output schema. Attach the method, assumptions, and intended interpretation
 to the numerical endpoints rather than calling every interval a CI.
 
-## Implementation direction — not implemented by this documentation change
+## Implemented conformance slice and remaining direction
 
-Bootstrap uncertainty estimation should be central rather than an afterthought.
-The program should run an explicitly selected estimator on explicit resamples,
-not have a language model invent interval endpoints. Preserve the original
-estimate alongside the resampled estimates. Treat basic/pivotal, percentile,
-studentized, and bias-corrected/accelerated intervals as distinct methods to
-implement and validate, not interchangeable names.
+`bootstrap_conformance.py` now implements one intentionally narrow reference
+case: the ordinary nonparametric bootstrap for the scalar arithmetic mean. The
+caller must explicitly declare IID sampling and observation-level resampling.
+The reference enumerates every ordered size-n sample from the empirical
+distribution with replacement, so it is deterministic and contains no finite-B
+Monte Carlo error. Exact enumeration is capped at 100,000 resamples and refuses
+rather than silently changing computational methods.
 
-Proposed acceptance work: deterministic fixtures for interval arithmetic;
-reproducible resampling; coverage experiments under declared sampling models;
-and negative cases in which the chosen method should warn or refuse a claim.
-The resampling unit and dependence assumptions must be explicit. More resamples
-should never be presented as a substitute for checking the sampling model.
+The output preserves the original estimate, empirical-bootstrap distribution
+mean, bootstrap standard error, raw bootstrap quantiles, basic/pivotal interval,
+quantile convention, resampling scheme, and machine-readable assumptions. The
+reference also states `guaranteed_valid_coverage=false`: exact computation of the
+empirical bootstrap distribution is not evidence that the bootstrap
+approximation is statistically valid for arbitrary estimators or sampling
+processes.
 
-A proposed result record includes the estimate, target quantity, sample size,
-sampling/resampling scheme, interval kind and level, standard error where
-available, seed and generator, draw count, failed-draw count, and applicability
-warnings. Mark these as future capabilities until the corresponding code and
-checks exist. The current executable remains the chi-square slice.
+The canonical small numeric oracle uses observations `[1,2,3,4]`. There are
+`4^4 = 256` ordered resamples. The estimate is `2.5`, the exact bootstrap
+standard error is `0.5590169943749475`, the inverse-empirical-CDF 0.025 and 0.975
+quantiles are `1.5` and `3.5`, and the resulting basic interval is `[1.5,3.5]`.
+`test_bootstrap_conformance.py` checks this result and refusal cases for an
+unstated IID assumption, dependent/time-series input, a non-observation
+resampling unit, unsupported interval methods, and an exact state space above
+the declared cap. Negative scalar observations are accepted because the target
+is a mean, not a count.
+
+This does not promote a general bootstrap API. Generic estimators, Monte Carlo
+resampling, seeded-generator receipts, percentile/studentized/BCa intervals,
+dependence-aware bootstrap methods, and subsampling remain separate future
+capabilities. They should be added only with their own assumptions and numerical
+or coverage checks. More resamples must never be presented as a substitute for
+checking the sampling model or bootstrap validity.
+
+`wasserman_bootstrap_cases.jsonl` contains model-facing cases for the same
+boundaries, including the exact small-mean oracle, unsupported-dependence refusal,
+and the distinction between eliminating Monte Carlo error and establishing
+coverage validity.
 
 ## Reuse decision
 
