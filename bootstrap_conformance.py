@@ -19,19 +19,27 @@ MAX_EXACT_RESAMPLES = 100_000
 
 
 class BootstrapInputError(ValueError):
-    pass
+    def __init__(self, code: str, message: str):
+        self.code = code
+        super().__init__(message)
 
 
 def _finite_numbers(xs: Any, name: str) -> list[float]:
     if not isinstance(xs, list) or len(xs) < 2:
-        raise BootstrapInputError(f"{name} must be an array with at least two numbers")
+        raise BootstrapInputError(
+            "invalid_observed", f"{name} must be an array with at least two numbers"
+        )
     out: list[float] = []
     for x in xs:
         if isinstance(x, bool) or not isinstance(x, (int, float)):
-            raise BootstrapInputError(f"{name} must contain only numbers")
+            raise BootstrapInputError(
+                "invalid_observed", f"{name} must contain only numbers"
+            )
         value = float(x)
         if not math.isfinite(value):
-            raise BootstrapInputError(f"{name} must contain only finite numbers")
+            raise BootstrapInputError(
+                "invalid_observed", f"{name} must contain only finite numbers"
+            )
         out.append(value)
     return out
 
@@ -46,49 +54,69 @@ def _inverse_ecdf_quantile(sorted_values: list[float], probability: float) -> fl
 
 def bootstrap_mean(record: Any) -> dict[str, Any]:
     if not isinstance(record, dict):
-        raise BootstrapInputError("input must be a JSON object")
+        raise BootstrapInputError("invalid_input", "input must be a JSON object")
 
     observed = _finite_numbers(record.get("observed"), "observed")
 
-    if record.get("sampling") != "iid":
+    sampling = record.get("sampling")
+    if sampling is None:
         raise BootstrapInputError(
-            "sampling must be explicitly 'iid'; dependent, clustered, and time-series "
-            "resampling are outside this conformance slice"
+            "iid_not_established", "sampling must be explicitly 'iid'"
         )
-    if record.get("resampling_unit") != "observation":
+    if sampling != "iid":
         raise BootstrapInputError(
-            "resampling_unit must be explicitly 'observation' for this conformance slice"
+            "unsupported_dependence",
+            "dependent, clustered, and time-series resampling are outside this conformance slice",
         )
+
+    resampling_unit = record.get("resampling_unit")
+    if resampling_unit is None:
+        raise BootstrapInputError(
+            "resampling_unit_not_established",
+            "resampling_unit must be explicitly 'observation'",
+        )
+    if resampling_unit != "observation":
+        raise BootstrapInputError(
+            "unsupported_resampling_unit",
+            "only observation-level resampling is implemented",
+        )
+
     if record.get("estimator", "mean") != "mean":
-        raise BootstrapInputError("only estimator='mean' is implemented")
+        raise BootstrapInputError(
+            "unsupported_estimator", "only estimator='mean' is implemented"
+        )
     if record.get("interval", "basic_bootstrap") != "basic_bootstrap":
-        raise BootstrapInputError("only interval='basic_bootstrap' is implemented")
+        raise BootstrapInputError(
+            "unsupported_interval", "only interval='basic_bootstrap' is implemented"
+        )
     if record.get("mode", "exact") != "exact":
-        raise BootstrapInputError("only mode='exact' is implemented")
+        raise BootstrapInputError("unsupported_mode", "only mode='exact' is implemented")
     if "weights" in record:
-        raise BootstrapInputError("weighted observations are outside this conformance slice")
+        raise BootstrapInputError(
+            "unsupported_weights", "weighted observations are outside this conformance slice"
+        )
 
     alpha_raw = record.get("alpha", 0.05)
     if isinstance(alpha_raw, bool) or not isinstance(alpha_raw, (int, float)):
-        raise BootstrapInputError("alpha must be a number between zero and one")
+        raise BootstrapInputError(
+            "invalid_alpha", "alpha must be a number between zero and one"
+        )
     alpha = float(alpha_raw)
     if not math.isfinite(alpha) or not 0 < alpha < 1:
-        raise BootstrapInputError("alpha must be between zero and one")
+        raise BootstrapInputError("invalid_alpha", "alpha must be between zero and one")
 
     n = len(observed)
     resample_count = n ** n
     if resample_count > MAX_EXACT_RESAMPLES:
         raise BootstrapInputError(
+            "exact_state_space_limit",
             f"exact bootstrap would require {resample_count} resamples; "
             f"limit is {MAX_EXACT_RESAMPLES}; this reference refuses rather than "
-            "silently switching to Monte Carlo"
+            "silently switching to Monte Carlo",
         )
 
     estimate = sum(observed) / n
-    replicates = [
-        sum(sample) / n
-        for sample in itertools.product(observed, repeat=n)
-    ]
+    replicates = [sum(sample) / n for sample in itertools.product(observed, repeat=n)]
     bootstrap_distribution_mean = sum(replicates) / resample_count
     standard_error = math.sqrt(
         sum((value - bootstrap_distribution_mean) ** 2 for value in replicates)
@@ -140,11 +168,29 @@ def main() -> int:
         try:
             result = bootstrap_mean(json.loads(line))
             print(json.dumps({"ok": True, "result": result}, separators=(",", ":")))
-        except (BootstrapInputError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        except BootstrapInputError as exc:
             failed = True
             print(
                 json.dumps(
-                    {"ok": False, "line": line_number, "error": str(exc)},
+                    {
+                        "ok": False,
+                        "line": line_number,
+                        "reason": exc.code,
+                        "error": str(exc),
+                    },
+                    separators=(",", ":"),
+                )
+            )
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            failed = True
+            print(
+                json.dumps(
+                    {
+                        "ok": False,
+                        "line": line_number,
+                        "reason": "invalid_input",
+                        "error": str(exc),
+                    },
                     separators=(",", ":"),
                 )
             )
