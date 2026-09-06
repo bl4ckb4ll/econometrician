@@ -16,6 +16,11 @@ class BootstrapConformanceTests(unittest.TestCase):
             "alpha": 0.05,
         }
 
+    def assert_refusal(self, record, code, text):
+        with self.assertRaisesRegex(BootstrapInputError, text) as caught:
+            bootstrap_mean(record)
+        self.assertEqual(caught.exception.code, code)
+
     def test_exact_small_sample_numeric_oracle(self):
         answer = bootstrap_mean(self.base_record())
         self.assertEqual(answer["estimate"], 2.5)
@@ -37,32 +42,27 @@ class BootstrapConformanceTests(unittest.TestCase):
     def test_refuses_unstated_iid_assumption(self):
         record = self.base_record()
         del record["sampling"]
-        with self.assertRaisesRegex(BootstrapInputError, "explicitly 'iid'"):
-            bootstrap_mean(record)
+        self.assert_refusal(record, "iid_not_established", "explicitly 'iid'")
 
     def test_refuses_dependent_sampling(self):
         record = self.base_record()
         record["sampling"] = "time_series"
-        with self.assertRaisesRegex(BootstrapInputError, "outside this conformance slice"):
-            bootstrap_mean(record)
+        self.assert_refusal(record, "unsupported_dependence", "outside this conformance slice")
 
     def test_refuses_non_observation_resampling_unit(self):
         record = self.base_record()
         record["resampling_unit"] = "cluster"
-        with self.assertRaisesRegex(BootstrapInputError, "resampling_unit"):
-            bootstrap_mean(record)
+        self.assert_refusal(record, "unsupported_resampling_unit", "observation-level")
 
     def test_refuses_unimplemented_interval(self):
         record = self.base_record()
         record["interval"] = "percentile"
-        with self.assertRaisesRegex(BootstrapInputError, "basic_bootstrap"):
-            bootstrap_mean(record)
+        self.assert_refusal(record, "unsupported_interval", "basic_bootstrap")
 
     def test_refuses_large_exact_state_space(self):
         record = self.base_record()
         record["observed"] = list(range(7))
-        with self.assertRaisesRegex(BootstrapInputError, "823543 resamples"):
-            bootstrap_mean(record)
+        self.assert_refusal(record, "exact_state_space_limit", "823543 resamples")
 
 
 if __name__ == "__main__":
