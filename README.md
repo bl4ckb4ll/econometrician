@@ -48,3 +48,11 @@ python3 -m unittest -v
 The book is a boundary and reference, not training data checked into this
 repository.  Fixtures here are independently written numeric cases, with a
 single well-known Mendel calculation used as a regression check.
+
+## Sources and next methods
+
+[WASSERMAN.md](WASSERMAN.md) links and summarizes five Normal Deviate posts on
+bootstrap, subsampling, randomized computation, permutation tests, and
+Bayesian/frequentist interpretation. It also links the book's bootstrap chapter
+and records the source-reuse decisions. The proposed resampling capabilities
+are not yet implemented; the current executable remains the chi-square slice.
