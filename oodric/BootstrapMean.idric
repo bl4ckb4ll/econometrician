@@ -1,0 +1,32 @@
+module BootstrapMean
+
+
+-- The useful calculation comes first. Helpers deliberately appear later so
+-- this is a real Oodriç source-order probe rather than dependency-ordered code.
+main : IO ()
+main = do
+  let (estimate, standard_error) = bootstrap_mean [1.0, 2.0, 3.0, 4.0]
+  putStrLn ("estimate=" ++ show estimate)
+  putStrLn ("standard_error=" ++ show standard_error)
+
+bootstrap_mean : List Double → (Double, Double)
+bootstrap_mean observed =
+  let replicates = map mean (resamples (length observed) observed)
+      estimate = mean observed
+      centre = mean replicates
+      standard_error = sqrt (mean (map (\value => square (value - centre)) replicates))
+   in (estimate, standard_error)
+
+mean : List Double → Double
+mean values = sum values / cast (length values)
+
+square : Double → Double
+square value = value * value
+
+-- Enumerate every ordered size-n resample with replacement. For the four
+-- observations above this is 4^4 = 256 bootstrap replicates, matching the
+-- deterministic reference used by the econometrician branch.
+resamples : Nat → List Double → List (List Double)
+resamples Z values = [[]]
+resamples (S k) values =
+  concat (map (\value => map (value ::) (resamples k values)) values)
