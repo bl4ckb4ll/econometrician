@@ -20,16 +20,18 @@ jobs:
           ref: b7ac1eea7adca7c44a68d465a24a55c8e0830c4c
           path: .tools/Idric
 
-      - name: Install compiler dependency
+      - name: Install host build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y chezscheme
+          sudo apt-get install -y build-essential curl
 
-      - name: Build Oodriç compiler
-        run: make -C "$GITHUB_WORKSPACE/.tools/Idric" bootstrap SCHEME=scheme
+      - name: Bootstrap Oodriç compiler
+        run: "$GITHUB_WORKSPACE/.tools/Idric/_/edric" bootstrap
 
       - name: Compile exact bootstrap with Oodriç
-        run: "$GITHUB_WORKSPACE/.tools/Idric/build/exec/idris2" --build oodric.ipkg
+        env:
+          IDRIS2_PREFIX: ${{ github.workspace }}/.tools/Idric/_/bootstrap-build
+        run: "$GITHUB_WORKSPACE/.tools/Idric/_/build/exec/idris2" --build oodric.ipkg
 
       - name: Check numerical oracle
         run: |
