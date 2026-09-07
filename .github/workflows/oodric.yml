@@ -1,0 +1,47 @@
+name: Oodriç exact-bootstrap probe
+
+on:
+  push:
+    branches:
+      - Oodriç
+  workflow_dispatch:
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout econometrician
+        uses: actions/checkout@v4
+
+      - name: Checkout Oodriç compiler
+        uses: actions/checkout@v4
+        with:
+          repository: isomorphisms/Idric
+          ref: b7ac1eea7adca7c44a68d465a24a55c8e0830c4c
+          path: .tools/Idric
+
+      - name: Install compiler dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chezscheme
+
+      - name: Build Oodriç compiler
+        run: make -C "$GITHUB_WORKSPACE/.tools/Idric" bootstrap SCHEME=scheme
+
+      - name: Compile exact bootstrap with Oodriç
+        run: "$GITHUB_WORKSPACE/.tools/Idric/build/exec/idris2" --build oodric.ipkg
+
+      - name: Check numerical oracle
+        run: |
+          ./build/exec/bootstrap-mean | tee /tmp/bootstrap.out
+          python3 - <<'PY'
+          from pathlib import Path
+
+          rows = dict(
+              line.split("=", 1)
+              for line in Path("/tmp/bootstrap.out").read_text().splitlines()
+              if "=" in line
+          )
+          assert abs(float(rows["estimate"]) - 2.5) < 1e-12
+          assert abs(float(rows["standard_error"]) - 0.5590169943749475) < 1e-12
+          PY
