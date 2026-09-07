@@ -1,0 +1,6 @@
+package econometrician_oodric
+
+sourcedir = "oodric"
+modules = BootstrapMean
+main = BootstrapMean
+executable = bootstrap-mean
