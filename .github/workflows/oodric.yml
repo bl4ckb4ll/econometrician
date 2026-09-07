@@ -26,12 +26,14 @@ jobs:
           sudo apt-get install -y build-essential curl
 
       - name: Bootstrap Oodriç compiler
-        run: "$GITHUB_WORKSPACE/.tools/Idric/_/edric" bootstrap
+        run: |
+          "$GITHUB_WORKSPACE/.tools/Idric/_/edric" bootstrap
 
       - name: Compile exact bootstrap with Oodriç
         env:
           IDRIS2_PREFIX: ${{ github.workspace }}/.tools/Idric/_/bootstrap-build
-        run: "$GITHUB_WORKSPACE/.tools/Idric/_/build/exec/idris2" --build oodric.ipkg
+        run: |
+          "$GITHUB_WORKSPACE/.tools/Idric/_/build/exec/idris2" --build oodric.ipkg
 
       - name: Check numerical oracle
         run: |
