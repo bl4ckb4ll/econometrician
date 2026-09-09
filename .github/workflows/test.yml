@@ -1,0 +1,25 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - wasserman-chi-square
+  pull_request:
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact event head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Record exact head
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          echo "expected=$EXPECTED_HEAD"
+          echo "actual=$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+      - name: Run tests
+        run: python3 -m unittest -v
