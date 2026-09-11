@@ -120,3 +120,12 @@ bootstrap, subsampling, randomized computation, permutation tests, and
 Bayesian/frequentist interpretation. It also links the book's bootstrap chapter
 and records the source-reuse decisions.  The repository links and summarizes
 these sources; it does not mirror the book chapter or blog article text.
+
+## Research notes — not implemented methods
+
+[Identifying a suspension response map](notes/suspension-response-identification.md)
+uses the Dakota eccentric-cam example to separate experimental identification,
+inverse conditioning, nuisance effects, input error, correlated observations,
+and geometric curvature. Cross-linked with ASE, Fulton, and Coxeter. No new
+runtime method, general-purpose bootstrap, or measured truck calibration is
+claimed.
