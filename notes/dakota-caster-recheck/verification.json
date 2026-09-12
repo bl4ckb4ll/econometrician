@@ -1,0 +1,23 @@
+{
+  "scope": "host-side numerical reproduction of conversation artifacts only",
+  "python": "3.13.5",
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "script_sha256": "b7c5c22547d38e88ac1addcb78f05e90daf251d817b2124576ec56a35d125e58",
+  "original_pretty_json_sha256": "692626827722b5ba20aeccbb5c043c9282549c072283136b0ad1845bea9ef92a",
+  "stored_compact_json_sha256": "2e03a89cf8c6c808699a5903255c27ec7e8c0055fe9010bf2837e7a51a6be470",
+  "original_artifact_rerun_byte_identical": true,
+  "stored_json_matches_complete_rerun_after_parsing": true,
+  "fit_counts": {
+    "comparison": 8,
+    "scale_sensitivity": 8,
+    "additional_driver_sensitivity": 6
+  },
+  "steering_derivative_check": "passed for both sides; max absolute discrepancy 4.117262086822393e-12",
+  "noise_free_coefficient_recovery_check": "passed for both sides; max absolute discrepancy 1.0658141036401503e-14",
+  "measured_vehicle_caster": "UNKNOWN",
+  "confidence_intervals": "not produced",
+  "cam_adjustment_calibration": "not performed",
+  "physical_device_execution": "not performed",
+  "repository_ci": "not established by this receipt"
+}
