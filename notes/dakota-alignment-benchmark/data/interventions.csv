@@ -1,0 +1,6 @@
+id,approx_datetime,side,cam,physical_motion,rotation_viewpoint,magnitude,state_before,state_after,evidence,status
+I-001,2026-09-06/07,driver,rear,"one flat ""forward"" then one flat back",not recovered,~60 deg each move,unknown,approximately original mark,conversation reconstruction,identity/viewpoint partly disputed
+I-002,before 2026-09-12 22:02Z,driver,rear,small inward (summary),"rear->front benchmark, but original rotation word not recovered",possibly about one flat; uncertain,unknown,also later described as fully outboard,conversation context,contradiction retained
+I-003,2026-09-12 before 20:46Z,passenger,front,outward,rear->front for any future CW/CCW label,large; exact angle not recovered,unknown,outboard,conversation context/photos,qualitative
+I-004,2026-09-12 ~20:46Z,passenger,front,farther outward,rear->front,known larger than prior state; exact angle not recovered,outboard,at/near fully outboard per user statement,conversation context/photos,qualitative; followed by settling observation
+I-005,2026-09-12 23:46Z,passenger,front,reverse inward,rear->front,small/reverse move; exact angle not recovered,at/near fully outboard,inward from extreme,user observation against witness mark,fourth move / first reverse move

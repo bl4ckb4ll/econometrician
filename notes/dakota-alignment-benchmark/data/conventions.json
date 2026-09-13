@@ -1,0 +1,45 @@
+{
+  "status": "benchmark conventions; historical source conventions remain preserved alongside these",
+  "vehicle_orientation": {
+    "driver": "left side of vehicle when seated facing forward",
+    "passenger": "right side of vehicle when seated facing forward",
+    "front": "toward bumper/front axle forward direction",
+    "rear": "toward cab/rearward along vehicle"
+  },
+  "cam_rotation": {
+    "viewpoint": "looking from the rear of the truck toward the front",
+    "clockwise": "clockwise in that view",
+    "counterclockwise": "counterclockwise in that view",
+    "warning": "A historical front-looking-back label reverses CW/CCW and must not be silently converted."
+  },
+  "pivot_motion": {
+    "outward": "away from engine/vehicle centerline",
+    "inward": "toward engine/vehicle centerline",
+    "note": "in/out motion is a physical displacement and is stored independently from cam-bolt rotation word."
+  },
+  "alignment_sign": {
+    "camber_positive": "top of tire outward",
+    "caster_positive": "top steering axis/pivot rearward",
+    "steering_positive_in_recovered_script": "right",
+    "warning": "historical user-dictated left/right row order must be retained even where it conflicts with script sign."
+  },
+  "sweep_model": {
+    "alpha": "steering-wheel rotation in radians, positive right in recovered script",
+    "theta": "individual road-wheel yaw in radians, positive right in recovered script",
+    "gamma": "measured camber in degrees",
+    "turn_order_in_recovered_script": [
+      -1.59,
+      -1,
+      -0.5,
+      0,
+      0.5,
+      1,
+      1.59
+    ]
+  },
+  "large_candidate_jacobian": {
+    "rows": "driver camber positions 0..6, then passenger positions 0..6",
+    "columns": "see jacobian_spec.json/state_names",
+    "basis": "coordinate basis of named state components; no orthonormal physical configuration-space basis is claimed"
+  }
+}
