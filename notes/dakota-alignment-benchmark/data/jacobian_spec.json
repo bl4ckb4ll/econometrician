@@ -1,0 +1,73 @@
+{
+  "status": "implemented candidate measurement-model Jacobian; not the unrecovered full physical suspension Jacobian",
+  "shape": [
+    14,
+    26
+  ],
+  "rows": [
+    {"name": "driver.camber[0]_deg", "unit": "deg"},
+    {"name": "driver.camber[1]_deg", "unit": "deg"},
+    {"name": "driver.camber[2]_deg", "unit": "deg"},
+    {"name": "driver.camber[3]_deg", "unit": "deg"},
+    {"name": "driver.camber[4]_deg", "unit": "deg"},
+    {"name": "driver.camber[5]_deg", "unit": "deg"},
+    {"name": "driver.camber[6]_deg", "unit": "deg"},
+    {"name": "passenger.camber[0]_deg", "unit": "deg"},
+    {"name": "passenger.camber[1]_deg", "unit": "deg"},
+    {"name": "passenger.camber[2]_deg", "unit": "deg"},
+    {"name": "passenger.camber[3]_deg", "unit": "deg"},
+    {"name": "passenger.camber[4]_deg", "unit": "deg"},
+    {"name": "passenger.camber[5]_deg", "unit": "deg"},
+    {"name": "passenger.camber[6]_deg", "unit": "deg"}
+  ],
+  "columns": [
+    {"name": "driver.gamma0_deg", "unit": "deg"},
+    {"name": "driver.B_deg", "unit": "deg"},
+    {"name": "driver.K_deg", "unit": "deg"},
+    {"name": "passenger.gamma0_deg", "unit": "deg"},
+    {"name": "passenger.B_deg", "unit": "deg"},
+    {"name": "passenger.K_deg", "unit": "deg"},
+    {"name": "steering.ratio", "unit": "dimensionless"},
+    {"name": "geometry.wheelbase_in", "unit": "in"},
+    {"name": "geometry.front_track_in", "unit": "in"},
+    {"name": "calibration.level_bias_deg", "unit": "deg"},
+    {"name": "calibration.driver_gauge_bias_deg", "unit": "deg"},
+    {"name": "calibration.passenger_gauge_bias_deg", "unit": "deg"},
+    {"name": "driver.alpha_offset[0]_rad", "unit": "rad"},
+    {"name": "driver.alpha_offset[1]_rad", "unit": "rad"},
+    {"name": "driver.alpha_offset[2]_rad", "unit": "rad"},
+    {"name": "driver.alpha_offset[3]_rad", "unit": "rad"},
+    {"name": "driver.alpha_offset[4]_rad", "unit": "rad"},
+    {"name": "driver.alpha_offset[5]_rad", "unit": "rad"},
+    {"name": "driver.alpha_offset[6]_rad", "unit": "rad"},
+    {"name": "passenger.alpha_offset[0]_rad", "unit": "rad"},
+    {"name": "passenger.alpha_offset[1]_rad", "unit": "rad"},
+    {"name": "passenger.alpha_offset[2]_rad", "unit": "rad"},
+    {"name": "passenger.alpha_offset[3]_rad", "unit": "rad"},
+    {"name": "passenger.alpha_offset[4]_rad", "unit": "rad"},
+    {"name": "passenger.alpha_offset[5]_rad", "unit": "rad"},
+    {"name": "passenger.alpha_offset[6]_rad", "unit": "rad"}
+  ],
+  "reference_state": {
+    "status": "numerical diagnostic reference copied from the disputed quarter-degree/ideal-Ackermann saved fit; not accepted physical state",
+    "values": [-2.029899191589185,-8.064282612829999,5.875744070846088,1.3341515392720393,5.047094321147211,8.682128431656844,17.4,131.3,62.8,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+    "source": "../dakota-caster-recheck/dakota_caster_recheck_results.json"
+  },
+  "derivatives": {
+    "analytic": ["gamma0","B","K","level bias","side gauge bias"],
+    "centered_finite_difference": ["steering ratio","wheelbase","front track","14 per-reading steering offsets"],
+    "finite_difference_test": "hybrid matrix agrees with all-finite-difference matrix within 2e-6 in regression test"
+  },
+  "diagnostics": {
+    "full_14x26": {"rank":14,"nullity":12,"condition_nonzero":55.79728737948368,"singular_values":[5.322070278952933,3.774064932841108,1.2523137121632308,1.0863752943642944,0.6776071931348145,0.5900710901209782,0.5790336155928372,0.46644404667504474,0.44625983113652656,0.35819917903044735,0.3121389406968817,0.2580421294550044,0.19471466162604958,0.09538224040815693]},
+    "core_first_12_columns": {"rank":9,"nullity":3,"condition_nonzero":807946900907.166,"singular_values":[5.303072321660554,3.7472613784972233,1.1267868721672651,0.9621192372477674,0.24313654670872978,0.16862247935542998,0.0105596678424811,0.002614472748666157,6.563639659619021e-12,2.6451472873516855e-16,6.303611095788014e-17,3.214626199259789e-17]},
+    "geometry_first_9_columns": {"rank":9,"nullity":0,"condition_nonzero":406882376521.9055,"singular_values":[2.670630047497994,2.653635022085868,1.1230540892618217,0.9618152809944904,0.24221386454572127,0.16841772939827318,0.010559641578015993,0.002614472392779511,6.563641488547524e-12]},
+    "coefficients_first_6_columns": {"rank":6,"nullity":0,"condition_nonzero":15.760426103883102,"singular_values":[2.6536324835754295,2.6536324835754295,0.9618095858029975,0.9618095858029975,0.16837314334551018,0.16837314334551015]}
+  },
+  "structural_warnings": [
+    "Full model is underdetermined by dimension: 26 state/nuisance components and 14 observations; nullity is at least 12 and is 12 at the diagnostic reference.",
+    "driver.gamma0 and driver gauge bias have identical columns; passenger.gamma0 and passenger gauge bias have identical columns; level bias adds further calibration confounding.",
+    "Allowing one steering offset per reading gives enough nuisance freedom to absorb row-wise discrepancies. The resulting pseudoinverse is a minimum-norm convention, not an identified suspension state.",
+    "The core geometry block is extremely poorly conditioned at the diagnostic reference because nominal ratio/wheelbase/track directions are nearly dependent in this narrow measurement design."
+  ]
+}
