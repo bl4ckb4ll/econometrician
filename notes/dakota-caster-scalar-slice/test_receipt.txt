@@ -5,7 +5,7 @@ test_common_camber_zero_shift_cancels_first_order (test_scalar_slice.ScalarSlice
 test_common_steering_zero_shift_cancels_first_order (test_scalar_slice.ScalarSliceTests.test_common_steering_zero_shift_cancels_first_order) ... ok
 test_equal_opposite_steering_magnitude_error_does_not_cancel (test_scalar_slice.ScalarSliceTests.test_equal_opposite_steering_magnitude_error_does_not_cancel) ... ok
 test_expected_jacobian (test_scalar_slice.ScalarSliceTests.test_expected_jacobian) ... ok
-test_historical_symmetric_pair_agreement (test_scalar_slice.ScalarSliceTests.test_historical_symmetric_pair_agreement) ... ok
+test_historical_magnitude_agreement_and_direction_discrepancy (test_scalar_slice.ScalarSliceTests.test_historical_magnitude_agreement_and_direction_discrepancy) ... ok
 test_legacy_illustrative_sigmas_are_not_used_as_inputs (test_scalar_slice.ScalarSliceTests.test_legacy_illustrative_sigmas_are_not_used_as_inputs) ... ok
 test_nominal_angle_conversion (test_scalar_slice.ScalarSliceTests.test_nominal_angle_conversion) ... ok
 test_printed_multiplier_rounding_discrepancy_is_small_and_explicit (test_scalar_slice.ScalarSliceTests.test_printed_multiplier_rounding_discrepancy_is_small_and_explicit) ... ok
@@ -17,6 +17,6 @@ test_symbolic_epsilons_survive_output (test_scalar_slice.ScalarSliceTests.test_s
 test_symmetric_multiplier (test_scalar_slice.ScalarSliceTests.test_symmetric_multiplier) ... ok
 
 ----------------------------------------------------------------------
-Ran 17 tests in 1.127s
+Ran 17 tests in 1.147s
 
 OK
