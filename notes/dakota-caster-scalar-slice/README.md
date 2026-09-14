@@ -1,120 +1,178 @@
-# Dakota caster: first trustworthy scalar slice
+# Dakota caster: verified scalar anchor and stagewise reconstruction
 
-This directory implements the first stopping point before any large Dakota
-Jacobian is allowed to inherit unverified signs or observations.
+This directory starts from one checked scalar result and only expands the
+reconstruction where the preserved evidence supports the next row.
 
-## Selected slice
+## Verified anchor
 
-The calculation uses the timestamped Sep 10 `G2` passenger half-turn pair from
-the recovered evidence ledger:
+The anchor remains the timestamped Sep 10 `G2` passenger half-turn pair:
 
-- `E-026`: `+0.5°` camber at `0.5 turn right`, 2026-09-10 16:50:13Z.
-- `E-028`: `+2.5°` camber at `0.5 turn left`, 2026-09-10 16:59:33Z.
+- `E-026`: `+0.5°` camber at `0.5 turn right`.
+- `E-028`: `+2.5°` camber at `0.5 turn left`.
 
-These are at-time user verbal readings. They avoid the known passenger
-left/right relabeling in the later seven-position Python transcription.
+The road-wheel angles were not directly measured in the recovered record.
+Using the documented nominal conversion
 
-The road-wheel angles were **not measured directly** in the recovered record.
-The default execution therefore uses the documented nominal conversion
-`theta = 360 * steering-wheel turns / 17.4`, while exposing both road-wheel
-angles as command-line inputs.
-
-The exact eccentric-cam state at these two readings was not recovered. The
-record says so rather than inferring it from nearby adjustment notes. The
-current CW/CCW convention is "rear looking forward"; it is preserved as a
-current convention and is not retroactively assigned to the selected readings.
-
-## Recomputed scalar
-
-For right-positive road-wheel steering,
-
-```
-C = (gamma_R - gamma_L) / (sin(theta_R) - sin(theta_L))
+```text
+theta = 360 * steering-wheel turns / 17.4
 ```
 
-At the nominal `theta_R = +10.3448275862°`,
-`theta_L = -10.3448275862°`, with `gamma_R = +0.5°` and
-`gamma_L = +2.5°`,
+gives nominal road-wheel angles `+/-10.3448275862°` and
 
-```
-signed odd coefficient C = -5.5687987431°
-reported magnitude |C| = 5.5687987431°
+```text
+signed odd coefficient = -5.5687987431°
+reported magnitude     =  5.5687987431°
 ```
 
-The historical ASE checkpoint reported the passenger symmetric-pair estimates
-as roughly `5–6°`, so the **magnitude** agrees with that historical range. The
-same checkpoint labels the passenger half-turn directions opposite the better
-timestamped E-026/E-028 sequence. That is a real provenance discrepancy:
-swapping the endpoints leaves `|C|` unchanged but reverses the signed odd
-coefficient. This slice therefore does **not** inherit a signed physical caster
-claim from the historical row labels.
+`scalar_slice.py` and `test_scalar_slice.py` remain the acceptance gate for
+that exact result. The first magnitude Jacobian row is
 
-The separate all-data robust fit (`5.4–5.5°`) is recorded but is not treated as
-the same calculation.
-
-The older printed reference rounded the multiplier to `2.784`; applying that
-printed value to the `2.0°` camber difference gives `5.568°`. The exact
-formula is `0.0007987431°` higher, a rounding discrepancy rather than a
-measurement discrepancy.
-
-## First-order row
-
-For caster **magnitude**, using degrees for all four input perturbations,
-
-```
-|C| ≈ 5.5687987431
-      - 0.2662274832 delta_theta_right
-      + 0.2662274832 delta_theta_left
-      - 2.7843993716 delta_gamma_right
-      + 2.7843993716 delta_gamma_left
-      + epsilon_setup_hysteresis
-      + epsilon_gauge_calibration
-      + epsilon_cam_state_model
+```text
+[-0.2662274832, +0.2662274832, -2.7843993716, +2.7843993716]
 ```
 
-and
+with columns
 
+```text
+[theta_right, theta_left, gamma_right, gamma_left]
 ```
-J_|C| =
-[ -0.2662274832, +0.2662274832, -2.7843993716, +2.7843993716 ]
+
+and all perturbations expressed in degrees.
+
+## Stagewise expansion
+
+`stage_reconstruction.py` extends from that anchor without importing the old
+all-data fit as a prior.
+
+### G2 Sep 10 passenger
+
+Three timestamped equal-and-opposite pairs can be formed under the same
+nominal steering conversion:
+
+| pair | evidence | nominal magnitude |
+|---|---|---:|
+| half turn | E-026 / E-028 | 5.5687987431° |
+| full turn | E-025 / E-029 | 5.6608161938° |
+| lock | E-024 / E-030 | 5.5236013430° |
+
+The range is only about `0.1372°` under the nominal-angle model. A direct
+least-squares combination of the three raw symmetric differences gives an odd
+sine coefficient of `-5.5647142714°`, magnitude `5.5647142714°`.
+
+This is useful internal consistency. It is not permission to claim a
+service-grade physical caster value: actual road-wheel angles were not
+measured, the historical passenger direction labels conflict with the
+timestamped sequence, and setup/calibration/model terms remain unresolved.
+
+### Driver history
+
+The old driver values near `8°` are explicitly rejected as physical evidence.
+They came from a lower-provenance/transcription path with conflicting
+half-left and full-lock readings. They are retained only as historical
+regression fixtures and are not a prior, target, calibration point, or
+ingredient in the reconstructed estimates.
+
+The partial timestamped G2 driver record is insufficient for a trusted
+symmetric sweep. G3 contains changed-state spot measurements, not a complete
+symmetric pair set.
+
+### G4 Sep 12 driver
+
+The corrected same-session G4 driver table is a separate generation after
+documented cam work and passenger-front settling. Under the same nominal angle
+conversion its symmetric-pair magnitudes are:
+
+| pair | evidence | nominal magnitude |
+|---|---|---:|
+| half turn | E-059 / E-057 | 3.4804992144° |
+| full turn | E-060 / E-056 | 3.5380101211–3.8918111332° |
+| lock | E-061 / E-055 | 2.5316506155° |
+
+Combining the three symmetric differences gives a nominal odd-coefficient
+magnitude interval of `2.8772184054–2.9749128589°`, where the interval is from
+the recorded `E-056` camber range rather than an invented statistical error
+bar.
+
+Do not read the G2 passenger-to-G4 driver difference as a clean causal caster
+change. They are different sides, generations, intervention states, steering
+paths, and setup states.
+
+The G4 passenger seven-position table remains provisional because its corrected
+canonical transcription was not recovered. No passenger G4 caster is promoted.
+
+## Intervention/state sequence
+
+The reconstruction keeps the stages separate:
+
+```text
+I0 -> G2 -> G3 -> I1 -> G4 -> I2
 ```
 
-The first two entries are degrees of caster per degree of road-wheel steering;
-the last two are degrees of caster per degree of camber.
+- `I0`: rear-driver cam one-flat experiment, then approximately returned;
+  historical rotation viewpoint/witness mark unresolved.
+- `G2`: Sep 10 timestamped sweep.
+- `G3`: Sep 11 changed-state spot readings.
+- `I1`: driver-rear movement is state/baseline-ambiguous; passenger-front was
+  moved substantially outward; passenger front then visibly settled about
+  0.5–1 cm after the move/steering path.
+- `G4`: Sep 12 sweep before the first reverse passenger-front move.
+- `I2`: passenger-front pivot moved back inward from near fully outboard.
 
-The perturbations are **not** declared independent. In particular, a common
-additive steering zero shift cancels at first order, whereas an equal increase
-in the magnitudes of the two opposite steering angles does not. No RSS or
-single `sigma` is produced.
+There is no preserved full sweep after `I2`. The post-reverse/current caster
+state is therefore unmeasured in this reconstruction.
 
-The old `0.25°` camber and `15°` steering-wheel sigmas from
-`dakota_caster_recheck.py` are deliberately excluded from propagation because
-that script labels them illustrative assumptions, not measured tolerances.
+For present/future cam descriptions, clockwise/counterclockwise means looking
+from the rear of the truck toward the front. Historical labels are not
+retroactively converted when their viewpoint was not preserved.
 
-Each unresolved epsilon is retained as a first-order Edriç-style object with
-`epsilon^2 = 0`. No mixed-product rule between distinct epsilons is assumed.
+## Uncertainty boundary
+
+Each accepted symmetric pair exposes its own checked first-order Jacobian with
+respect to
+
+```text
+theta_right
+theta_left
+gamma_right
+gamma_left
+```
+
+The actual road-wheel angles remain explicit unknown inputs rather than hidden
+constants.
+
+No independence assumption is made. In particular:
+
+- a common additive steering-zero shift cancels at first order for a nominal
+  equal/opposite pair;
+- equal/opposite steering-magnitude error does not cancel;
+- a common additive camber-zero shift cancels in the pair difference;
+- calibration, gauge placement, setup, settling, and hysteresis are not thereby
+  eliminated.
+
+The legacy `0.25°` camber and `15°` steering-wheel sigmas remain excluded
+because they were illustrative assumptions, not measured tolerances. No RSS or
+single-sigma collapse is produced.
+
+The unresolved symbolic terms remain
+
+```text
+epsilon_setup_hysteresis
+epsilon_gauge_calibration
+epsilon_cam_state_model
+```
+
+with `epsilon^2 = 0` for each named first-order object. No mixed-product rule
+between distinct epsilons is assumed.
 
 ## Run
 
 ```sh
 python3 scalar_slice.py > scalar_slice_result.json
-python3 -m unittest -v test_scalar_slice.py
+python3 stage_reconstruction.py > stage_reconstruction_result.json
+python3 -m unittest -v test_scalar_slice.py test_stage_reconstruction.py
 ```
 
-Measured road-wheel angles can replace the nominal ones without editing code:
-
-```sh
-python3 scalar_slice.py \
-  --theta-right-deg RIGHT \
-  --theta-left-deg LEFT
-```
-
-## Stop rule
-
-This slice checks provenance, arithmetic, sign handling, units, the local
-Jacobian, and centered finite-difference derivatives. It makes no claim that
-the nominal steering conversion is the true wheel angle and no claim that the
-result is a service-grade physical caster measurement.
-
-Do not use this directory as permission to construct or trust the larger
-Jacobian. The next row must earn the same provenance and derivative checks.
+The stage reconstruction is deliberately not a monolithic inverse suspension
+fit. It preserves the complete recoverable stage history while refusing to
+manufacture missing road-wheel angles, missing cam positions, an independent
+Gaussian covariance, or a post-I2 measurement.

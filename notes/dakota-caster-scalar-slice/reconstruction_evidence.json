@@ -1,0 +1,157 @@
+{
+  "reconstruction_id": "dakota-sep07-sep12-stagewise-v1",
+  "vehicle": "2005 Dodge Dakota",
+  "anchor": {
+    "slice_id": "sep10-passenger-half-turn",
+    "evidence_ids": ["E-026", "E-028"],
+    "caster_magnitude_deg": 5.568798743106686,
+    "status": "checked_in_pr5"
+  },
+  "steering_model": {
+    "overall_ratio": 17.4,
+    "lock_turns_from_center": 1.59,
+    "formula": "theta_deg = 360 * steering_wheel_turns / 17.4",
+    "actual_road_wheel_angles_status": "not recovered numerically",
+    "rule": "nominal angles are explicit model inputs, never observations"
+  },
+  "uncertainty_policy": {
+    "automatic_independence_assumption": false,
+    "rss_sigma_collapse": false,
+    "excluded_illustrative_sigmas": {
+      "camber_deg": 0.25,
+      "steering_wheel_deg": 15.0
+    },
+    "explicit_first_order_sources": [
+      "delta_theta_right_deg",
+      "delta_theta_left_deg",
+      "delta_gamma_right_deg",
+      "delta_gamma_left_deg"
+    ],
+    "unresolved_symbolic_epsilons": [
+      "epsilon_setup_hysteresis",
+      "epsilon_gauge_calibration",
+      "epsilon_cam_state_model"
+    ],
+    "epsilon_rule": "each named epsilon has epsilon^2 = 0 for its own first-order bookkeeping; no mixed epsilon_i*epsilon_j rule is assumed"
+  },
+  "stages": [
+    {
+      "id": "G0",
+      "kind": "setup",
+      "status": "context_only",
+      "observations": [
+        "outdoors on mixed gravel/grass",
+        "long spirit level across hood",
+        "absolute surface/body-level error not numerically calibrated"
+      ]
+    },
+    {
+      "id": "G1",
+      "date": "2026-09-07",
+      "kind": "seven_position_transcription",
+      "status": "rejected_as_physical_caster_evidence",
+      "reason": [
+        "secondary transcription",
+        "driver half-left has conflicting surviving values",
+        "driver max-right conflicts with later timestamped verbal reading",
+        "passenger row direction conflicts with timestamped G2 sequence"
+      ],
+      "legacy_driver_8_degree_results_status": "rejected; never used as a prior, target, or calibration"
+    },
+    {
+      "id": "I0",
+      "kind": "intervention",
+      "status": "preserved_with_ambiguity",
+      "description": "driver rear LCA cam about one flat forward then about one flat back to original",
+      "unresolved": "historical forward/CW/CCW viewpoint and exact witness-mark angle not recovered"
+    },
+    {
+      "id": "G2",
+      "date": "2026-09-10",
+      "kind": "timestamped_measurement_generation",
+      "status": "best_preserved_pre_later-intervention passenger sweep",
+      "passenger": {
+        "observations": [
+          {"evidence_id": "E-024", "steering": "maximum right", "turns": 1.59, "direction": "right", "camber_deg": 0.0},
+          {"evidence_id": "E-025", "steering": "1 turn right", "turns": 1.0, "direction": "right", "camber_deg": 0.25},
+          {"evidence_id": "E-026", "steering": "0.5 turn right", "turns": 0.5, "direction": "right", "camber_deg": 0.5},
+          {"evidence_id": "E-027", "steering": "straight", "turns": 0.0, "direction": "straight", "camber_deg": [1.125, 1.25]},
+          {"evidence_id": "E-028", "steering": "0.5 turn left", "turns": 0.5, "direction": "left", "camber_deg": 2.5},
+          {"evidence_id": "E-029", "steering": "1 turn left", "turns": 1.0, "direction": "left", "camber_deg": 4.25, "note": "later 4.75 correction exists but row/generation mapping is unresolved"},
+          {"evidence_id": "E-030", "steering": "maximum left", "turns": 1.59, "direction": "left", "camber_deg": 6.0}
+        ],
+        "accepted_symmetric_pairs": [
+          {"id": "half_turn", "right": "E-026", "left": "E-028"},
+          {"id": "full_turn", "right": "E-025", "left": "E-029"},
+          {"id": "lock", "right": "E-024", "left": "E-030"}
+        ],
+        "signed_physical_caster_status": "not accepted because historical direction labels conflict; magnitudes remain usable conditionally"
+      },
+      "driver": {
+        "status": "insufficient_for_trusted_full_sweep",
+        "observations": [
+          {"evidence_id": "E-031", "steering": "full lock right", "camber_deg": [-6.5, -6.0], "quality": "cramped/less reliable"},
+          {"evidence_id": "E-032", "steering": "1 turn right", "raw": "4.5", "quality": "sign not safely recovered"}
+        ]
+      }
+    },
+    {
+      "id": "G3",
+      "date": "2026-09-11",
+      "kind": "changed_state_spot_measurements",
+      "status": "separate_generation_insufficient_for_symmetric_caster",
+      "observations": [
+        {"evidence_id": "E-034", "side": "driver", "steering": "straight", "camber_deg": -2.0},
+        {"evidence_id": "E-035", "side": "passenger", "steering": "straight", "camber_deg": 2.5},
+        {"evidence_id": "E-036", "side": "driver", "steering": "full lock farthest left", "camber_deg": -6.0},
+        {"evidence_id": "E-037", "side": "passenger", "steering": "full lock farthest left", "camber_deg": 1.0}
+      ]
+    },
+    {
+      "id": "I1",
+      "date": "2026-09-12",
+      "kind": "intervention_and_settling",
+      "status": "state_change_preserved",
+      "observations": [
+        "driver rear small inward move reported, but separate statement says driver rear fully outboard; baseline/state ambiguity unresolved",
+        "passenger front large outward move",
+        "passenger front corner observed to settle approximately 0.5 to 1 cm after outward move / steering path"
+      ],
+      "rule": "settling is hysteresis/state evidence, not a precision ride-height datum"
+    },
+    {
+      "id": "G4",
+      "date": "2026-09-12",
+      "kind": "post_adjustment_sweep_before_first_reverse_move",
+      "status": "driver corrected table accepted conditionally; passenger table provisional only",
+      "driver": {
+        "observations": [
+          {"evidence_id": "E-055", "steering": "maximum left", "turns": 1.59, "direction": "left", "camber_deg": -0.5},
+          {"evidence_id": "E-056", "steering": "1 left", "turns": 1.0, "direction": "left", "camber_deg": [-1.25, -1.0]},
+          {"evidence_id": "E-057", "steering": "0.5 left", "turns": 0.5, "direction": "left", "camber_deg": -2.75},
+          {"evidence_id": "E-058", "steering": "straight", "turns": 0.0, "direction": "straight", "camber_deg": -3.5},
+          {"evidence_id": "E-059", "steering": "0.5 right", "turns": 0.5, "direction": "right", "camber_deg": -4.0},
+          {"evidence_id": "E-060", "steering": "1 right", "turns": 1.0, "direction": "right", "camber_deg": -3.75},
+          {"evidence_id": "E-061", "steering": "maximum right", "turns": 1.59, "direction": "right", "camber_deg": -3.25}
+        ],
+        "accepted_symmetric_pairs": [
+          {"id": "half_turn", "right": "E-059", "left": "E-057"},
+          {"id": "full_turn", "right": "E-060", "left": "E-056"},
+          {"id": "lock", "right": "E-061", "left": "E-055"}
+        ]
+      },
+      "passenger": {
+        "status": "provisional_not_benchmark_truth",
+        "reason": "corrected canonical passenger table was not recovered"
+      }
+    },
+    {
+      "id": "I2",
+      "date": "2026-09-12",
+      "kind": "intervention",
+      "status": "post_G4_state_not_yet_swept",
+      "description": "passenger-front pivot moved back inward from near fully-outboard state",
+      "unresolved": "exact cam rotation angle not recovered"
+    }
+  ]
+}
