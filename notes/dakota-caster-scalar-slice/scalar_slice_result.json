@@ -13,24 +13,9 @@
     "signed_odd_coefficient_deg": -5.568798743106686
   },
   "derivative_check": {
-    "absolute_error": [
-      6.5139005300807185e-12,
-      6.5139005300807185e-12,
-      4.045035417732379e-10,
-      4.045035417732379e-10
-    ],
-    "analytic": [
-      -0.26622748317647016,
-      0.26622748317647016,
-      -2.784399371553343,
-      2.784399371553343
-    ],
-    "finite_difference": [
-      -0.26622748316995626,
-      0.26622748316995626,
-      -2.7843993719578464,
-      2.7843993719578464
-    ],
+    "absolute_error": [6.5139005300807185e-12, 6.5139005300807185e-12, 4.045035417732379e-10, 4.045035417732379e-10],
+    "analytic": [-0.26622748317647016, 0.26622748317647016, -2.784399371553343, 2.784399371553343],
+    "finite_difference": [-0.26622748316995626, 0.26622748316995626, -2.7843993719578464, 2.7843993719578464],
     "pass": true,
     "tolerance": 1e-08
   },
@@ -47,66 +32,37 @@
   },
   "historical_comparison": {
     "all_data_fit_is_not_same_calculation": true,
+    "direction_discrepancy_effect": "The symmetric caster magnitude is invariant to swapping the two endpoints, but the signed odd coefficient reverses sign. Therefore magnitude can be compared historically; signed physical caster cannot be inherited from the historical row labels.",
+    "direction_label_discrepancy": "ASE issue #4 labels the passenger half-turn values in the opposite left/right direction from the timestamped E-026/E-028 sequence: issue #4 has about +0.5 deg at half-left and +2.25 to +2.75 deg at half-right; timestamped evidence has +0.5 deg at half-right and +2.5 deg at half-left.",
+    "direction_label_result": "discrepancy",
     "exact_minus_printed_multiplier_result_deg": 0.0007987431066860395,
     "historical_all_data_robust_fit_deg": "5.4-5.5",
+    "magnitude_result": "agreement",
     "printed_reference_multiplier": 2.784,
     "recomputed_inside_reported_range": true,
-    "reported_symmetric_pair_range_deg": [
-      5.0,
-      6.0
-    ],
-    "result": "agreement",
-    "result_using_printed_multiplier_deg": 5.568
+    "reported_symmetric_pair_range_deg": [5.0, 6.0],
+    "result_using_printed_multiplier_deg": 5.568,
+    "signed_historical_comparison_status": "not accepted: historical left/right labels conflict with timestamped evidence"
   },
   "jacobian_row": {
-    "columns": [
-      "theta_right_deg",
-      "theta_left_deg",
-      "gamma_right_deg",
-      "gamma_left_deg"
-    ],
+    "columns": ["theta_right_deg", "theta_left_deg", "gamma_right_deg", "gamma_left_deg"],
     "gamma_derivative_unit": "deg caster per deg camber",
     "quantity": "caster_magnitude_deg",
     "theta_derivative_unit": "deg caster per deg road-wheel angle",
-    "values": [
-      -0.26622748317647016,
-      0.26622748317647016,
-      -2.784399371553343,
-      2.784399371553343
-    ]
+    "values": [-0.26622748317647016, 0.26622748317647016, -2.784399371553343, 2.784399371553343]
   },
   "linearization": {
     "automatic_independence_assumption": false,
     "base_caster_magnitude_deg": 5.568798743106686,
     "epsilon_rule": "each named epsilon is retained symbolically with epsilon^2 = 0 for first-order bookkeeping; no rule for mixed epsilon_i*epsilon_j is assumed",
-    "note": "No RSS/sigma collapse is performed. Correlated perturbations remain separate; a covariance matrix may be applied later only if supported.",
+    "note": "No RSS/sigma collapse; correlated perturbations remain separate.",
     "terms": [
-      {
-        "coefficient": -0.26622748317647016,
-        "source": "delta_theta_right_deg",
-        "unit": "deg caster per deg road-wheel angle"
-      },
-      {
-        "coefficient": 0.26622748317647016,
-        "source": "delta_theta_left_deg",
-        "unit": "deg caster per deg road-wheel angle"
-      },
-      {
-        "coefficient": -2.784399371553343,
-        "source": "delta_gamma_right_deg",
-        "unit": "deg caster per deg camber"
-      },
-      {
-        "coefficient": 2.784399371553343,
-        "source": "delta_gamma_left_deg",
-        "unit": "deg caster per deg camber"
-      }
+      {"coefficient": -0.26622748317647016, "source": "delta_theta_right_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": 0.26622748317647016, "source": "delta_theta_left_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": -2.784399371553343, "source": "delta_gamma_right_deg", "unit": "deg caster per deg camber"},
+      {"coefficient": 2.784399371553343, "source": "delta_gamma_left_deg", "unit": "deg caster per deg camber"}
     ],
-    "unresolved_symbolic_epsilons": [
-      "epsilon_setup_hysteresis",
-      "epsilon_gauge_calibration",
-      "epsilon_cam_state_model"
-    ]
+    "unresolved_symbolic_epsilons": ["epsilon_setup_hysteresis", "epsilon_gauge_calibration", "epsilon_cam_state_model"]
   },
   "provenance": {
     "generation": "G2",
@@ -171,31 +127,11 @@
       "reason": "the legacy script explicitly labels these illustrative assumptions, not measured tolerances"
     },
     "numerically_propagated_first_order_sources": [
-      {
-        "coefficient": -0.26622748317647016,
-        "source": "delta_theta_right_deg",
-        "unit": "deg caster per deg road-wheel angle"
-      },
-      {
-        "coefficient": 0.26622748317647016,
-        "source": "delta_theta_left_deg",
-        "unit": "deg caster per deg road-wheel angle"
-      },
-      {
-        "coefficient": -2.784399371553343,
-        "source": "delta_gamma_right_deg",
-        "unit": "deg caster per deg camber"
-      },
-      {
-        "coefficient": 2.784399371553343,
-        "source": "delta_gamma_left_deg",
-        "unit": "deg caster per deg camber"
-      }
+      {"coefficient": -0.26622748317647016, "source": "delta_theta_right_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": 0.26622748317647016, "source": "delta_theta_left_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": -2.784399371553343, "source": "delta_gamma_right_deg", "unit": "deg caster per deg camber"},
+      {"coefficient": 2.784399371553343, "source": "delta_gamma_left_deg", "unit": "deg caster per deg camber"}
     ],
-    "unresolved": [
-      "epsilon_setup_hysteresis",
-      "epsilon_gauge_calibration",
-      "epsilon_cam_state_model"
-    ]
+    "unresolved": ["epsilon_setup_hysteresis", "epsilon_gauge_calibration", "epsilon_cam_state_model"]
   }
 }
