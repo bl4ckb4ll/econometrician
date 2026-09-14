@@ -23,3 +23,6 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
       - name: Run tests
         run: python3 -m unittest -v
+      - name: Run Dakota scalar and stage reconstruction tests
+        working-directory: notes/dakota-caster-scalar-slice
+        run: python3 -m unittest -v test_scalar_slice.py test_stage_reconstruction.py
