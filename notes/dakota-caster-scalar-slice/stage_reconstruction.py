@@ -6,7 +6,8 @@ import json
 import math
 from pathlib import Path
 
-from scalar_slice import analytic_jacobian_magnitude, signed_caster_coefficient
+from scalar_slice import (analytic_jacobian_magnitude, derivative_check,
+                          signed_caster_coefficient)
 
 HERE = Path(__file__).resolve().parent
 
@@ -42,12 +43,15 @@ def pair_results(stage: dict, side: str, steering_model: dict) -> list[dict]:
         for gr in _value_endpoints(rr["camber_deg"]):
             for gl in _value_endpoints(ll["camber_deg"]):
                 signed = signed_caster_coefficient(tr, tl, gr, gl)
+                x = [tr, tl, gr, gl]
+                jacobian = analytic_jacobian_magnitude(*x)
                 values.append({
                     "gamma_right_deg": gr,
                     "gamma_left_deg": gl,
                     "signed_odd_coefficient_deg": signed,
                     "magnitude_deg": abs(signed),
-                    "jacobian_magnitude": analytic_jacobian_magnitude(tr, tl, gr, gl),
+                    "jacobian_magnitude": jacobian,
+                    "derivative_check": derivative_check(x, jacobian),
                 })
         mags = sorted(v["magnitude_deg"] for v in values)
         signed_values = sorted(v["signed_odd_coefficient_deg"] for v in values)
@@ -66,7 +70,7 @@ def pair_results(stage: dict, side: str, steering_model: dict) -> list[dict]:
 
 
 def combined_symmetric_odd_interval(pair_rows: list[dict]) -> list[float]:
-    """Least-squares odd coefficient from independent raw pair differences.
+    """Least-squares odd coefficient from raw pair differences.
 
     This is only a deterministic diagnostic under the nominal-angle sine model.
     Ranged camber inputs are propagated by enumerating their endpoints.
@@ -115,6 +119,15 @@ def build_result(evidence: dict) -> dict:
             **evidence["anchor"],
             "reproduced_caster_magnitude_deg": anchor_value,
             "exact_agreement": True,
+        },
+        "preserved_evidence_boundary": {
+            "G0_measurements_retained": len(stages["G0"].get("measurements", [])),
+            "G1_driver_rows_retained_but_rejected": len(stages["G1"].get("driver_transcription", [])),
+            "G1_passenger_rows_retained_but_rejected": len(stages["G1"].get("passenger_transcription", [])),
+            "secondary_reconstruction_records_status": evidence["secondary_reconstruction_records"]["status"],
+            "G4_passenger_rows_retained_but_provisional": len(stages["G4"]["passenger"].get("observations", [])),
+            "unmapped_4_75_correction_status": stages["G2"]["passenger"]["unmapped_correction"]["status"],
+            "discrepancy_rules": evidence["discrepancy_rules"],
         },
         "model_boundary": {
             "pair_formula": "B = (gamma_R - gamma_L) / (sin(theta_R) - sin(theta_L))",

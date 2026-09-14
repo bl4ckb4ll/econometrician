@@ -107,6 +107,7 @@ class StageReconstructionTests(unittest.TestCase):
                     self.assertEqual(len(endpoint["jacobian_magnitude"]), 4)
                     self.assertTrue(all(math.isfinite(x)
                                         for x in endpoint["jacobian_magnitude"]))
+                    self.assertTrue(endpoint["derivative_check"]["pass"])
 
     def test_anchor_common_zero_modes_cancel_first_order(self):
         pair = self.result["G2_passenger"]["pair_results"][0]
@@ -118,6 +119,15 @@ class StageReconstructionTests(unittest.TestCase):
     def test_generations_are_not_grand_averaged(self):
         self.assertTrue(self.result["model_boundary"]["no_grand_average_across_generations"])
         self.assertNotIn("overall_caster", self.result)
+
+    def test_full_preserved_rows_are_carried_without_promotion(self):
+        b = self.result["preserved_evidence_boundary"]
+        self.assertEqual(b["G0_measurements_retained"], 6)
+        self.assertEqual(b["G1_driver_rows_retained_but_rejected"], 7)
+        self.assertEqual(b["G1_passenger_rows_retained_but_rejected"], 7)
+        self.assertEqual(b["G4_passenger_rows_retained_but_provisional"], 7)
+        self.assertIn("not_used", b["secondary_reconstruction_records_status"])
+        self.assertIn("not silently substituted", b["unmapped_4_75_correction_status"])
 
     def test_cli_output_is_byte_deterministic(self):
         cmd = [sys.executable, str(HERE / "stage_reconstruction.py")]
