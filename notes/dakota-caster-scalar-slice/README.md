@@ -42,9 +42,15 @@ reported magnitude |C| = 5.5687987431°
 ```
 
 The historical ASE checkpoint reported the passenger symmetric-pair estimates
-as roughly `5–6°`, so this recomputation agrees with that historical range. The
-separate all-data robust fit (`5.4–5.5°`) is recorded but is not treated as the
-same calculation.
+as roughly `5–6°`, so the **magnitude** agrees with that historical range. The
+same checkpoint labels the passenger half-turn directions opposite the better
+timestamped E-026/E-028 sequence. That is a real provenance discrepancy:
+swapping the endpoints leaves `|C|` unchanged but reverses the signed odd
+coefficient. This slice therefore does **not** inherit a signed physical caster
+claim from the historical row labels.
+
+The separate all-data robust fit (`5.4–5.5°`) is recorded but is not treated as
+the same calculation.
 
 The older printed reference rounded the multiplier to `2.784`; applying that
 printed value to the `2.0°` camber difference gives `5.568°`. The exact
