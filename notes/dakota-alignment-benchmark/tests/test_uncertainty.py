@@ -7,7 +7,7 @@ from dakota_benchmark.uncertainty import (
     SymbolicUncertainty, UncertaintyContractError,
     audit_resampling_plan, build_covariance_receipt,
     combine_correlated_estimates, nonlinear_box_receipt, odd_even_components,
-    propagate_linear, require_compatible_observations,
+    propagate_linear, replay_odd_even_bootstrap, require_compatible_observations,
 )
 
 
@@ -244,6 +244,28 @@ def test_cluster_plan_retains_actual_independent_unit_count_and_odd_even_pairs()
     assert receipt.independent_group_count == 2
     assert receipt.pairing_status == "symmetric_odd_even_pairs_preserved"
     assert receipt.symmetric_pair_count == 1
+
+
+def test_odd_even_bootstrap_replay_resamples_whole_groups_and_recomputes_both():
+    plan = ResamplingPlan(
+        sampling_structure="clustered",
+        resampling_unit="sweep",
+        group_ids=("sweep_1", "sweep_1", "sweep_2", "sweep_2"),
+        covered_effects=("between_sweep_variation",),
+        provenance="two synthetic complete sweeps for structural regression",
+        pair_ids=("half_turn", "half_turn", "half_turn", "half_turn"),
+        pair_roles=("plus", "minus", "plus", "minus"),
+    )
+    replicates = replay_odd_even_bootstrap(
+        plan,
+        gamma_values=(0.5, 2.5, 1.0, 3.0),
+        group_draws=(("sweep_1", "sweep_2"), ("sweep_2", "sweep_2")),
+    )
+    assert replicates[0].sampled_group_ids == ("sweep_1", "sweep_2")
+    assert replicates[0].odd_components == pytest.approx((-1.0,))
+    assert replicates[0].even_components == pytest.approx((1.75,))
+    assert replicates[1].odd_components == pytest.approx((-1.0,))
+    assert replicates[1].even_components == pytest.approx((2.0,))
 
 
 def test_odd_even_pair_must_stay_inside_each_resampling_group():
