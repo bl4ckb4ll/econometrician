@@ -49,4 +49,4 @@ Run from the package root:
 python -m pytest -q
 ```
 
-The sibling legacy `../dakota-caster-recheck/dakota_caster_recheck.py` also regenerates parsed JSON identical to its saved result in the current environment. Formatting differences are ignored. That legacy receipt is deliberately separate from the new benchmark tests because it validates old implementation reproducibility, not source correctness.
+The sibling legacy `../dakota-caster-recheck/dakota_caster_recheck.py` must preserve exact JSON structure and nonnumeric values while reproducing every float within `rtol=1e-9`, `atol=1e-10`. The tolerance admits last-bit linear-algebra variation across runners without admitting a change at the precision used by the historical conclusions. That legacy receipt is deliberately separate from the new benchmark tests because it validates old implementation reproducibility, not source correctness.

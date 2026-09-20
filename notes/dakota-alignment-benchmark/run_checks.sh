@@ -13,8 +13,46 @@ else
   exit 0
 fi
 PYTHONDONTWRITEBYTECODE=1 python "$LEGACY/dakota_caster_recheck.py" > /tmp/dakota_caster_recheck_results.json
-python -m json.tool --sort-keys --compact /tmp/dakota_caster_recheck_results.json > /tmp/dakota_caster_recheck_results.normalized.json
-python -m json.tool --sort-keys --compact "$LEGACY/dakota_caster_recheck_results.json" > /tmp/dakota_caster_recheck_saved.normalized.json
-cmp /tmp/dakota_caster_recheck_results.normalized.json /tmp/dakota_caster_recheck_saved.normalized.json
+python - /tmp/dakota_caster_recheck_results.json "$LEGACY/dakota_caster_recheck_results.json" <<'PY'
+import json
+import math
+import sys
+
+
+def compare(actual, expected, path="$"):
+    if isinstance(actual, bool) or isinstance(expected, bool):
+        if actual is not expected:
+            raise AssertionError(f"{path}: {actual!r} != {expected!r}")
+        return
+    if isinstance(actual, (int, float)) and isinstance(expected, (int, float)):
+        if not math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-10):
+            raise AssertionError(f"{path}: {actual!r} != {expected!r}")
+        return
+    if type(actual) is not type(expected):
+        raise AssertionError(
+            f"{path}: type {type(actual).__name__} != {type(expected).__name__}"
+        )
+    if isinstance(actual, dict):
+        if actual.keys() != expected.keys():
+            raise AssertionError(f"{path}: object keys differ")
+        for key in actual:
+            compare(actual[key], expected[key], f"{path}.{key}")
+        return
+    if isinstance(actual, list):
+        if len(actual) != len(expected):
+            raise AssertionError(f"{path}: list lengths differ")
+        for index, (left, right) in enumerate(zip(actual, expected)):
+            compare(left, right, f"{path}[{index}]")
+        return
+    if actual != expected:
+        raise AssertionError(f"{path}: {actual!r} != {expected!r}")
+
+
+with open(sys.argv[1]) as generated_file:
+    generated = json.load(generated_file)
+with open(sys.argv[2]) as saved_file:
+    saved = json.load(saved_file)
+compare(generated, saved)
+PY
 printf '%s
-' 'legacy caster script output: parsed JSON identical (stored whitespace intentionally differs)'
+' 'legacy caster script output: structure/text exact; floats within rtol=1e-9, atol=1e-10'

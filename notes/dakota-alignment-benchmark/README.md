@@ -79,8 +79,8 @@ The prior conversation audit states that it could not recover complete original 
 Current receipt:
 
 - 36 benchmark tests pass;
-- the recovered legacy caster script regenerates parsed JSON identical to its
-  saved result (formatting is deliberately ignored).
+- the recovered legacy caster script preserves exact JSON structure/text and
+  reproduces floats within `rtol=1e-9`, `atol=1e-10` across runners.
 
 The second result demonstrates old-code reproducibility only. It does not resolve the passenger row-direction/value conflicts.
 
