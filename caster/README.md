@@ -75,6 +75,10 @@ groups, gives every group the same pair set, and contains exactly one plus and
 one minus member of every pair.  The current surviving single-sweep Dakota
 record therefore cannot produce a bootstrap error bar; the programs validate
 the future resampling structure but do not manufacture independent groups.
+The benchmark uncertainty module also has a deterministic replay kernel whose
+input is the exact sequence of sampled group IDs; every replay recomputes both
+odd and even components after whole-group resampling, so no hidden RNG state or
+row-wise pseudo-replication is required to test the bootstrap rule.
 All formats are ordinary tab-separated text, not JSON.
 
 ## Run
