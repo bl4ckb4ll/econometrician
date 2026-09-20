@@ -161,18 +161,32 @@ data SamplingStructure : Set where
 data ResamplingUnit : Set where
   steeringPosition sweep session : ResamplingUnit
 
-planIsValid : SamplingStructure → ResamplingUnit → Nat → Bool → Bool
-planIsValid designed steeringPosition _ _ = false
-planIsValid _ _ 0 _ = false
-planIsValid _ _ (suc 0) _ = false
-planIsValid _ _ _ true = false
-planIsValid _ _ _ false = true
+oddComponent : Float → Float → Float
+oddComponent gammaPlus gammaMinus = (gammaPlus - gammaMinus) ÷ 2.0
+
+evenComponent : Float → Float → Float
+evenComponent gammaPlus gammaMinus = (gammaPlus + gammaMinus) ÷ 2.0
+
+planIsValid : SamplingStructure → ResamplingUnit → Nat → Bool → Bool → Bool → Bool
+planIsValid designed steeringPosition _ _ _ _ = false
+planIsValid _ _ 0 _ _ _ = false
+planIsValid _ _ (suc 0) _ _ _ = false
+planIsValid _ _ _ true _ _ = false
+planIsValid _ _ _ _ false _ = false
+planIsValid _ _ _ _ _ false = false
+planIsValid _ _ _ false true true = true
 
 g2Input : PairInput
 g2Input = pair (180.0 ÷ 17.4) (- (180.0 ÷ 17.4)) 0.5 2.5
 
 g2Estimate : Float
 g2Estimate = casterMagnitude g2Input
+
+g2OddComponent : Float
+g2OddComponent = oddComponent 0.5 2.5
+
+g2EvenComponent : Float
+g2EvenComponent = evenComponent 0.5 2.5
 
 g2Jacobian : Jacobian
 g2Jacobian = analyticJacobian g2Input
@@ -210,6 +224,8 @@ naiveThreePairVariance = (1.0 + 0.25) ÷ 3.0
 checksPass : Bool
 checksPass =
   within g2Estimate 5.568798743106686 0.0000000001
+  and within g2OddComponent (-1.0) 0.0000000001
+  and within g2EvenComponent 1.5 0.0000000001
   and within (dThetaRight g2Jacobian) (- 0.2662274831764701) 0.0000000001
   and within (dThetaLeft g2Jacobian) 0.2662274831764701 0.0000000001
   and within (dGammaRight g2Jacobian) (- 2.784399371553343) 0.0000000001
@@ -223,8 +239,10 @@ checksPass =
   and within commonSteeringZeroLoading 0.0 0.0000000001
   and within commonCamberZeroLoading 0.0 0.0000000001
   and (naiveThreePairVariance < correlatedThreePairVariance)
-  and not (planIsValid designed steeringPosition 7 false)
-  and not (planIsValid clustered sweep 2 true)
+  and not (planIsValid designed steeringPosition 7 false false false)
+  and not (planIsValid clustered sweep 2 true true true)
+  and planIsValid clustered sweep 2 false true true
+  and not (planIsValid clustered sweep 2 false false true)
 
 statusText : Bool → String
 statusText true = "PASS"
@@ -238,6 +256,8 @@ main =
   putStrLn "case_id\tg2-passenger-half-turn" >>
   putStrLn "theta_source_kind\tmanual_17.4_to_1_nominal_conversion" >>
   putStrLn ("caster_magnitude_deg\t" ++ showFloat g2Estimate) >>
+  putStrLn ("odd_camber_component_deg\t" ++ showFloat g2OddComponent) >>
+  putStrLn ("even_camber_component_deg\t" ++ showFloat g2EvenComponent) >>
   putStrLn ("jacobian.theta_right_deg\t" ++ showFloat (dThetaRight g2Jacobian)) >>
   putStrLn ("jacobian.theta_left_deg\t" ++ showFloat (dThetaLeft g2Jacobian)) >>
   putStrLn ("jacobian.gamma_right_deg\t" ++ showFloat (dGammaRight g2Jacobian)) >>
@@ -260,4 +280,6 @@ main =
   putStrLn
     ("three_pair_naive_variance\t" ++ showFloat naiveThreePairVariance) >>
   putStrLn "designed_steering_positions_bootstrap\tREJECTED" >>
-  putStrLn "bootstrap_explicit_error_overlap\tREJECTED"
+  putStrLn "bootstrap_explicit_error_overlap\tREJECTED" >>
+  putStrLn "odd_even_pair_preservation\tREQUIRED" >>
+  putStrLn "split_odd_even_pair\tREJECTED"
