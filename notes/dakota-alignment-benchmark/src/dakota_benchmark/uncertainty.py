@@ -180,6 +180,14 @@ class ResamplingReceipt:
 
 
 @dataclass(frozen=True)
+class OddEvenBootstrapReplicate:
+    sampled_group_ids: tuple[str, ...]
+    pair_ids: tuple[str, ...]
+    odd_components: tuple[float, ...]
+    even_components: tuple[float, ...]
+
+
+@dataclass(frozen=True)
 class EstimateCombinationReceipt:
     labels: tuple[str, ...]
     estimate: float
@@ -508,6 +516,65 @@ def audit_resampling_plan(
         pairing_status=pairing_status,
         symmetric_pair_count=symmetric_pair_count,
     )
+
+
+def replay_odd_even_bootstrap(
+    plan: ResamplingPlan,
+    gamma_values: Sequence[float],
+    group_draws: Sequence[Sequence[str]],
+) -> tuple[OddEvenBootstrapReplicate, ...]:
+    """Replay explicit cluster-bootstrap draws and recompute odd/even components.
+
+    The draws are explicit rather than RNG-generated so a receipt can record the
+    exact resampled groups.  Each replicate must draw exactly the original
+    number of independent groups, with replacement.
+    """
+    receipt = audit_resampling_plan(plan)
+    if receipt.pairing_status != "symmetric_odd_even_pairs_preserved":
+        raise UncertaintyContractError("odd_even_pairing_required_for_bootstrap")
+    if len(gamma_values) != len(plan.group_ids):
+        raise UncertaintyContractError("bootstrap_value_count_mismatch")
+    values = np.asarray(gamma_values, dtype=float)
+    if not np.all(np.isfinite(values)):
+        raise UncertaintyContractError("nonfinite_bootstrap_value")
+
+    lookup: dict[tuple[str, str, str], float] = {}
+    for group_id, pair_id, role, value in zip(
+        plan.group_ids, plan.pair_ids, plan.pair_roles, values.tolist()
+    ):
+        key = (group_id, pair_id, role)
+        if key in lookup:
+            raise UncertaintyContractError("duplicate_odd_even_bootstrap_member")
+        lookup[key] = value
+
+    pair_ids = tuple(sorted(set(plan.pair_ids)))
+    known_groups = set(plan.group_ids)
+    replicates: list[OddEvenBootstrapReplicate] = []
+    for draw in group_draws:
+        sampled = tuple(draw)
+        if len(sampled) != receipt.independent_group_count:
+            raise UncertaintyContractError("bootstrap_draw_wrong_group_count")
+        if any(group_id not in known_groups for group_id in sampled):
+            raise UncertaintyContractError("bootstrap_draw_unknown_group")
+        odd_values = []
+        even_values = []
+        for pair_id in pair_ids:
+            components = [
+                odd_even_components(
+                    lookup[(group_id, pair_id, "plus")],
+                    lookup[(group_id, pair_id, "minus")],
+                )
+                for group_id in sampled
+            ]
+            odd_values.append(float(np.mean([part[0] for part in components])))
+            even_values.append(float(np.mean([part[1] for part in components])))
+        replicates.append(OddEvenBootstrapReplicate(
+            sampled_group_ids=sampled,
+            pair_ids=pair_ids,
+            odd_components=tuple(odd_values),
+            even_components=tuple(even_values),
+        ))
+    return tuple(replicates)
 
 
 def combine_correlated_estimates(
