@@ -90,7 +90,10 @@ fi
 
 if command -v agda >/dev/null 2>&1; then
   mkdir -p "$work_dir/agda"
-  agda --compile --compile-dir="$work_dir/agda" "$script_dir/agda/CasterReceipt.agda"
+  (
+    cd "$script_dir/agda"
+    agda --compile --compile-dir="$work_dir/agda" CasterReceipt.agda
+  )
   "$work_dir/agda/CasterReceipt" >"$work_dir/agda.tsv"
   "$script_dir/check_receipt.sh" "$work_dir/agda.tsv" Agda
   grep -F 'designed_steering_positions_bootstrap	REJECTED' "$work_dir/agda.tsv" >/dev/null
