@@ -39,6 +39,16 @@ class StageReconstructionTests(unittest.TestCase):
             self.assertAlmostEqual(a, e, places=12)
         self.assertLess(max(actual) - min(actual), 0.14)
 
+    def test_G2_pairs_retain_odd_and_even_components(self):
+        first = self.result["G2_passenger"]["pair_results"][0]["endpoint_linearizations"][0]
+        self.assertAlmostEqual(first["odd_camber_component_deg"], -1.0, places=12)
+        self.assertAlmostEqual(first["even_camber_component_deg"], 1.5, places=12)
+        for stage_name, side in (("G2_passenger", None), ("G4_driver", None)):
+            for pair in self.result[stage_name]["pair_results"]:
+                for endpoint in pair["endpoint_linearizations"]:
+                    self.assertIn("odd_camber_component_deg", endpoint)
+                    self.assertIn("even_camber_component_deg", endpoint)
+
     def test_G2_combined_odd_coefficient_is_near_anchor_not_eight(self):
         interval = self.result["G2_passenger"]["nominal_combined_odd_coefficient_interval_deg"]
         self.assertAlmostEqual(interval[0], -5.564714271422755, places=12)
