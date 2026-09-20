@@ -1,8 +1,8 @@
-sampling_structure	resampling_unit	group_id	covered_effects	provenance
-designed	steering_position	max_left	between_position_variation	one Dakota seven-position sweep
-designed	steering_position	one_left	between_position_variation	one Dakota seven-position sweep
-designed	steering_position	half_left	between_position_variation	one Dakota seven-position sweep
-designed	steering_position	straight	between_position_variation	one Dakota seven-position sweep
-designed	steering_position	half_right	between_position_variation	one Dakota seven-position sweep
-designed	steering_position	one_right	between_position_variation	one Dakota seven-position sweep
-designed	steering_position	max_right	between_position_variation	one Dakota seven-position sweep
+sampling_structure	resampling_unit	group_id	pair_id	pair_role	covered_effects	provenance
+designed	steering_position	max_left	lock	minus	between_position_variation	one Dakota seven-position sweep
+designed	steering_position	one_left	full_turn	minus	between_position_variation	one Dakota seven-position sweep
+designed	steering_position	half_left	half_turn	minus	between_position_variation	one Dakota seven-position sweep
+designed	steering_position	straight	center	plus	between_position_variation	one Dakota seven-position sweep
+designed	steering_position	half_right	half_turn	plus	between_position_variation	one Dakota seven-position sweep
+designed	steering_position	one_right	full_turn	plus	between_position_variation	one Dakota seven-position sweep
+designed	steering_position	max_right	lock	plus	between_position_variation	one Dakota seven-position sweep
