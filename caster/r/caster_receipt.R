@@ -52,6 +52,13 @@ signed_coefficient <- function(x) {
 
 caster_magnitude <- function(x) abs(signed_coefficient(x))
 
+odd_even_components <- function(gamma_plus, gamma_minus) {
+  c(
+    odd = (gamma_plus - gamma_minus) / 2,
+    even = (gamma_plus + gamma_minus) / 2
+  )
+}
+
 analytic_jacobian <- function(x) {
   theta_right <- x[1] * rad_per_deg
   theta_left <- x[2] * rad_per_deg
@@ -274,7 +281,7 @@ audit_resampling <- function(path, covariance_effects) {
   if (is.null(path) || !file.exists(path)) return(NULL)
   rows <- read_tsv(path)
   if (!identical(names(rows), c(
-    "sampling_structure", "resampling_unit", "group_id",
+    "sampling_structure", "resampling_unit", "group_id", "pair_id", "pair_role",
     "covered_effects", "provenance"
   ))) abort_contract("invalid_resampling_header")
   if (length(unique(rows$sampling_structure)) != 1 ||
@@ -293,8 +300,33 @@ audit_resampling <- function(path, covariance_effects) {
   }
   group_count <- length(unique(rows$group_id))
   if (group_count < 2) abort_contract("fewer_than_two_resampling_groups")
+
+  if (any(!nzchar(rows$pair_id))) abort_contract("missing_odd_even_pair_id")
+  if (any(!rows$pair_role %in% c("plus", "minus"))) {
+    abort_contract("invalid_odd_even_pair_role")
+  }
+  groups <- unique(rows$group_id)
+  reference_pairs <- NULL
+  for (group_id in groups) {
+    group_rows <- rows[rows$group_id == group_id, , drop = FALSE]
+    pair_ids <- sort(unique(group_rows$pair_id))
+    if (is.null(reference_pairs)) {
+      reference_pairs <- pair_ids
+    } else if (!identical(pair_ids, reference_pairs)) {
+      abort_contract("odd_even_pair_set_mismatch_between_resampling_groups")
+    }
+    for (pair_id in pair_ids) {
+      roles <- sort(group_rows$pair_role[group_rows$pair_id == pair_id])
+      if (!identical(roles, c("minus", "plus"))) {
+        abort_contract(
+          "odd_even_pair_incomplete_within_resampling_group",
+          paste(group_id, pair_id, sep = ":")
+        )
+      }
+    }
+  }
   list(structure = structure, unit = unit, group_count = group_count,
-       effects = effects)
+       effects = effects, pair_count = length(reference_pairs))
 }
 
 arguments <- commandArgs(trailingOnly = TRUE)
@@ -327,6 +359,7 @@ resampling <- audit_resampling(resampling_path, covariance_effects)
 
 right <- observations[observations$endpoint == "right", ]
 left <- observations[observations$endpoint == "left", ]
+odd_even <- odd_even_components(inputs[3], inputs[4])
 emit("receipt_version", "caster-uncertainty-v1")
 emit("implementation", "R")
 emit("case_id", policy[["case_id"]])
@@ -345,6 +378,8 @@ emit("input_order", paste(input_labels, collapse = ","))
 emit("input_values", paste(vapply(inputs, format_number, character(1)), collapse = ","))
 emit("signed_coefficient_deg", format_number(signed_coefficient(inputs)))
 emit("caster_magnitude_deg", format_number(caster_magnitude(inputs)))
+emit("odd_camber_component_deg", format_number(odd_even[["odd"]]))
+emit("even_camber_component_deg", format_number(odd_even[["even"]]))
 emit("jacobian_values", paste(vapply(jacobian, format_number, character(1)), collapse = ","))
 emit("jacobian_units", "deg_per_deg,deg_per_deg,deg_per_deg,deg_per_deg")
 emit("finite_difference_max_abs_error", format_number(derivative_error))
@@ -387,6 +422,8 @@ if (is.null(resampling)) {
   emit("resampling_status", "plan_validated_not_executed")
   emit("resampling_unit", resampling$unit)
   emit("independent_group_count", resampling$group_count)
+  emit("resampling_pairing", "symmetric_odd_even_pairs_preserved")
+  emit("symmetric_pair_count", resampling$pair_count)
 }
 
 # Analytically soluble regression: three estimates each have independent
