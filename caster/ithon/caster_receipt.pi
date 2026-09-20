@@ -156,11 +156,21 @@ def exact_upper_with_symmetric_angle_radius(
     return absolute(gamma_difference / smallest_denominator)
 
 
+def odd_component(gamma_plus ∈ float, gamma_minus ∈ float) → float:
+    return (gamma_plus - gamma_minus) / 2.0
+
+
+def even_component(gamma_plus ∈ float, gamma_minus ∈ float) → float:
+    return (gamma_plus + gamma_minus) / 2.0
+
+
 def resampling_plan_valid(
     sampling_structure ∈ str,
     resampling_unit ∈ str,
     independent_groups ∈ int,
     overlaps_explicit_error ∈ bool,
+    odd_even_pairs_complete ∈ bool,
+    pair_sets_match ∈ bool,
 ) → bool:
     if sampling_structure == "designed":
         if resampling_unit == "steering_position":
@@ -168,6 +178,10 @@ def resampling_plan_valid(
     if independent_groups < 2:
         return False
     if overlaps_explicit_error:
+        return False
+    if not odd_even_pairs_complete:
+        return False
+    if not pair_sets_match:
         return False
     return True
 
@@ -177,6 +191,12 @@ theta_right ∈ float ← 180.0 / 17.4
 theta_left ∈ float ← -theta_right
 gamma_right ∈ float ← 0.5
 gamma_left ∈ float ← 2.5
+odd_camber ∈ float ← odd_component(gamma_right, gamma_left)
+even_camber ∈ float ← even_component(gamma_right, gamma_left)
+require(absolute(odd_camber - (-1.0)) < 0.000000000001,
+        "odd_component_mismatch")
+require(absolute(even_camber - 1.5) < 0.000000000001,
+        "even_component_mismatch")
 
 estimate ∈ float ← caster_magnitude(
     theta_right, theta_left, gamma_right, gamma_left
@@ -255,13 +275,21 @@ require(combined_variance > naive_independent_variance,
         "shared_systematic_shrank_as_independent_noise")
 
 designed_position_plan_valid ∈ bool ← resampling_plan_valid(
-    "designed", "steering_position", 7, False
+    "designed", "steering_position", 7, False, False, False
 )
 require(designed_position_plan_valid == False, "designed_positions_accepted_as_iid")
 double_count_plan_valid ∈ bool ← resampling_plan_valid(
-    "clustered", "sweep", 2, True
+    "clustered", "sweep", 2, True, True, True
 )
 require(double_count_plan_valid == False, "bootstrap_error_overlap_accepted")
+paired_plan_valid ∈ bool ← resampling_plan_valid(
+    "clustered", "sweep", 2, False, True, True
+)
+require(paired_plan_valid == True, "complete_odd_even_pairs_rejected")
+split_pair_plan_valid ∈ bool ← resampling_plan_valid(
+    "clustered", "sweep", 2, False, False, True
+)
+require(split_pair_plan_valid == False, "split_odd_even_pair_accepted")
 
 print("receipt_version\tcaster-uncertainty-v1")
 print("implementation\tIthon")
@@ -269,6 +297,8 @@ print("case_id\tg2-passenger-half-turn")
 print("status\tPASS")
 print("theta_source_kind\tmanual_17.4_to_1_nominal_conversion")
 print("caster_magnitude_deg\t", format(estimate, ".12f"), sep="")
+print("odd_camber_component_deg\t", format(odd_camber, ".12f"), sep="")
+print("even_camber_component_deg\t", format(even_camber, ".12f"), sep="")
 print("jacobian.theta_right_deg\t", format(j_theta_right, ".12f"), sep="")
 print("jacobian.theta_left_deg\t", format(j_theta_left, ".12f"), sep="")
 print("jacobian.gamma_right_deg\t", format(j_gamma_right, ".12f"), sep="")
@@ -291,3 +321,5 @@ print("three_pair_correlated_variance\t", format(combined_variance, ".12f"), sep
 print("three_pair_naive_variance\t", format(naive_independent_variance, ".12f"), sep="")
 print("designed_steering_positions_bootstrap\tREJECTED")
 print("bootstrap_explicit_error_overlap\tREJECTED")
+print("odd_even_pair_preservation\tREQUIRED")
+print("split_odd_even_pair\tREJECTED")
