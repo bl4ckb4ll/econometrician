@@ -35,6 +35,15 @@ expect_rejection() {
 if command -v Rscript >/dev/null 2>&1; then
   Rscript "$script_dir/r/caster_receipt.R" "$case_g2" >"$work_dir/r-g2.tsv"
   "$script_dir/check_receipt.sh" "$work_dir/r-g2.tsv" R
+  grep -F 'odd_camber_component_deg	-1.000000000000' "$work_dir/r-g2.tsv" >/dev/null
+  grep -F 'even_camber_component_deg	1.500000000000' "$work_dir/r-g2.tsv" >/dev/null
+  Rscript "$script_dir/r/caster_receipt.R" "$case_g2" \
+    --resampling "$regressions/odd-even-paired-sweeps.tsv" >"$work_dir/r-paired.tsv"
+  grep -F 'resampling_pairing	symmetric_odd_even_pairs_preserved' "$work_dir/r-paired.tsv" >/dev/null
+  grep -F 'independent_group_count	2' "$work_dir/r-paired.tsv" >/dev/null
+  expect_rejection odd_even_pair_incomplete_within_resampling_group "$work_dir/r-split.txt" \
+    Rscript "$script_dir/r/caster_receipt.R" "$case_g2" \
+      --resampling "$regressions/split-odd-even-pair.tsv"
   Rscript "$script_dir/r/caster_receipt.R" "$case_h006" >"$work_dir/r-h006.tsv"
   grep -F 'error_bar_status	illustrative_only_not_error_bar' "$work_dir/r-h006.tsv" >/dev/null
   grep -F 'propagated_standard_deviation_deg	0.863804278906' "$work_dir/r-h006.tsv" >/dev/null
@@ -62,6 +71,8 @@ if [ -n "$ithon_bin" ] && [ -x "$ithon_bin" ]; then
   grep -F '"schema": "ithon.checked.v1"' "$work_dir/ithon-check.jsonl" >/dev/null
   grep -F 'designed_steering_positions_bootstrap	REJECTED' "$work_dir/ithon.tsv" >/dev/null
   grep -F 'bootstrap_explicit_error_overlap	REJECTED' "$work_dir/ithon.tsv" >/dev/null
+  grep -F 'odd_even_pair_preservation	REQUIRED' "$work_dir/ithon.tsv" >/dev/null
+  grep -F 'split_odd_even_pair	REJECTED' "$work_dir/ithon.tsv" >/dev/null
   printf 'PASS\tIthon whole-module check receipt\n'
 else
   blocked Ithon 'set ITHON_BIN to the pinned Ithon launcher'
@@ -70,6 +81,15 @@ fi
 if command -v runghc >/dev/null 2>&1; then
   runghc "$script_dir/haskell/CasterReceipt.hs" "$case_g2" >"$work_dir/haskell-g2.tsv"
   "$script_dir/check_receipt.sh" "$work_dir/haskell-g2.tsv" Haskell
+  grep -F 'odd_camber_component_deg	-1.000000000000' "$work_dir/haskell-g2.tsv" >/dev/null
+  grep -F 'even_camber_component_deg	1.500000000000' "$work_dir/haskell-g2.tsv" >/dev/null
+  runghc "$script_dir/haskell/CasterReceipt.hs" "$case_g2" \
+    --resampling "$regressions/odd-even-paired-sweeps.tsv" >"$work_dir/haskell-paired.tsv"
+  grep -F 'resampling_pairing	symmetric_odd_even_pairs_preserved' "$work_dir/haskell-paired.tsv" >/dev/null
+  grep -F 'independent_group_count	2' "$work_dir/haskell-paired.tsv" >/dev/null
+  expect_rejection odd_even_pair_incomplete_within_resampling_group "$work_dir/haskell-split.txt" \
+    runghc "$script_dir/haskell/CasterReceipt.hs" "$case_g2" \
+      --resampling "$regressions/split-odd-even-pair.tsv"
   runghc "$script_dir/haskell/CasterReceipt.hs" "$case_h006" >"$work_dir/haskell-h006.tsv"
   grep -F 'error_bar_status	illustrative_only_not_error_bar' "$work_dir/haskell-h006.tsv" >/dev/null
   grep -F 'propagated_standard_deviation_deg	0.863804278906' "$work_dir/haskell-h006.tsv" >/dev/null
@@ -102,6 +122,8 @@ if command -v agda >/dev/null 2>&1; then
   "$work_dir/agda/CasterReceipt" >"$work_dir/agda.tsv"
   "$script_dir/check_receipt.sh" "$work_dir/agda.tsv" Agda
   grep -F 'designed_steering_positions_bootstrap	REJECTED' "$work_dir/agda.tsv" >/dev/null
+  grep -F 'odd_even_pair_preservation	REQUIRED' "$work_dir/agda.tsv" >/dev/null
+  grep -F 'split_odd_even_pair	REJECTED' "$work_dir/agda.tsv" >/dev/null
   printf 'PASS\tAgda compiled kernel\n'
 else
   blocked Agda 'agda not found'
@@ -135,6 +157,8 @@ if [ -n "$idric_bin" ] && [ -x "$idric_bin" ]; then
   fi
   "$script_dir/check_receipt.sh" "$work_dir/idric.tsv" 'Idriç'
   grep -F 'designed_steering_positions_bootstrap	REJECTED' "$work_dir/idric.tsv" >/dev/null
+  grep -F 'odd_even_pair_preservation	REQUIRED' "$work_dir/idric.tsv" >/dev/null
+  grep -F 'split_odd_even_pair	REJECTED' "$work_dir/idric.tsv" >/dev/null
   printf 'PASS\tIdriç compiled kernel\n'
 else
   blocked 'Idriç' 'set IDRIC_BIN to the pinned Idriç compiler'
