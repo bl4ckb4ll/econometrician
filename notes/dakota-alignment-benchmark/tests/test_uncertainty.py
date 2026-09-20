@@ -6,7 +6,7 @@ from dakota_benchmark.uncertainty import (
     NamedJacobian, ObservationIdentity, ResamplingPlan,
     SymbolicUncertainty, UncertaintyContractError,
     audit_resampling_plan, build_covariance_receipt,
-    combine_correlated_estimates, nonlinear_box_receipt,
+    combine_correlated_estimates, nonlinear_box_receipt, odd_even_components,
     propagate_linear, require_compatible_observations,
 )
 
@@ -194,6 +194,12 @@ def test_half_turn_five_degree_bound_requires_asymmetric_nonlinear_interval():
     assert receipt.as_dict()["coverage"] == "complete_box_interval"
 
 
+def test_symmetric_pair_odd_and_even_components_are_both_retained():
+    odd, even = odd_even_components(0.5, 2.5)
+    assert odd == pytest.approx(-1.0)
+    assert even == pytest.approx(1.5)
+
+
 def test_dakota_steering_positions_are_not_bootstrap_units():
     plan = ResamplingPlan(
         sampling_structure="designed",
@@ -224,13 +230,47 @@ def test_bootstrap_and_explicit_measurement_error_cannot_cover_same_effect():
         audit_resampling_plan(plan, explicit_error_sources=[source])
 
 
-def test_cluster_plan_retains_actual_independent_unit_count():
+def test_cluster_plan_retains_actual_independent_unit_count_and_odd_even_pairs():
     plan = ResamplingPlan(
         sampling_structure="clustered",
         resampling_unit="measurement_session",
         group_ids=("session_1", "session_1", "session_2", "session_2"),
         covered_effects=("between_session_variation",),
         provenance="two sessions; illustrative validation only",
+        pair_ids=("half_turn", "half_turn", "half_turn", "half_turn"),
+        pair_roles=("plus", "minus", "plus", "minus"),
     )
     receipt = audit_resampling_plan(plan)
     assert receipt.independent_group_count == 2
+    assert receipt.pairing_status == "symmetric_odd_even_pairs_preserved"
+    assert receipt.symmetric_pair_count == 1
+
+
+def test_odd_even_pair_must_stay_inside_each_resampling_group():
+    plan = ResamplingPlan(
+        sampling_structure="clustered",
+        resampling_unit="measurement_session",
+        group_ids=("session_1", "session_2"),
+        covered_effects=("between_session_variation",),
+        provenance="invalid split pair regression",
+        pair_ids=("half_turn", "half_turn"),
+        pair_roles=("plus", "minus"),
+    )
+    with pytest.raises(UncertaintyContractError,
+                       match="odd_even_pair_incomplete_within_resampling_group"):
+        audit_resampling_plan(plan)
+
+
+def test_single_sweep_cannot_be_promoted_to_odd_even_bootstrap():
+    plan = ResamplingPlan(
+        sampling_structure="clustered",
+        resampling_unit="sweep",
+        group_ids=("sep10", "sep10"),
+        covered_effects=("between_sweep_variation",),
+        provenance="surviving G2 Dakota sweep",
+        pair_ids=("half_turn", "half_turn"),
+        pair_roles=("plus", "minus"),
+    )
+    with pytest.raises(UncertaintyContractError,
+                       match="insufficient_independent_resampling_groups"):
+        audit_resampling_plan(plan)
