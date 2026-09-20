@@ -2,7 +2,7 @@
 
 | Destination | Safe now | Must remain blocked / qualified |
 |---|---|---|
-| Edriç epsilon | explicit unresolved-tolerance labels; `epsilon_i^2=0` as current intended nilpotent property; no ordering | mixed-product rule; conversion to variance/interval; conflation with Robinson infinitesimal |
+| Idriç epsilon | explicit unresolved-tolerance labels; `epsilon_i^2=0` as current intended nilpotent property; no ordering | mixed-product rule; conversion to variance/interval; conflation with Robinson infinitesimal |
 | Jacobian library | named/unit-checked candidate 14×26 measurement Jacobian; finite-difference verification; SVD/rank checks | calling it the full physical Dakota Jacobian; unique inverse claim |
 | Curvature | general nearest-curve formula; second derivative of recovered sweep basis | truck-specific curvature value; project-specific “curvature Jacobian” definition |
 | Inverse uncertainty | SVD/nullspace diagnostics; interval inverse feasibility; explicit failure modes | `1/sigma` as universal inverse error; pseudoinverse as identified state |

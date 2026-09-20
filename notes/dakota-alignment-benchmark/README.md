@@ -52,7 +52,7 @@ The record contains ordinary Jacobian ideas, a sweep second derivative, and the 
 3. **Discrepancy ledger** — `data/discrepancy_ledger.csv` and `data/contradictions.jsonl`.
 4. **Measurement-generation report** — `reports/measurement_generations.md`.
 5. **Uncertainty taxonomy/representation** — `reports/uncertainty_spec.md` plus `src/dakota_benchmark/uncertainty.py`.
-6. **Edriç epsilon specification** — `reports/epsilon_spec.md` plus `src/dakota_benchmark/epsilon.py`.
+6. **Idriç epsilon specification** — `reports/epsilon_spec.md` plus `src/dakota_benchmark/epsilon.py`.
 7. **Reproducible calculation suite** — `src/dakota_benchmark/geometry.py`, tests, and `reports/calculations.md`.
 8. **Large Jacobian implementation** — `src/dakota_benchmark/measurement_model.py`, `data/candidate_large_jacobian.csv`, and `data/jacobian_spec.json`.
 9. **Curvature Jacobian specification/implementation status** — `reports/curvature_jacobian.md` and the explicit refusal boundary in `curvature.py`.

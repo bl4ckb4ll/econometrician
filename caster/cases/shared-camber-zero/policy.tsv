@@ -1,5 +1,5 @@
 key	value
 case_id	g2-common-camber-zero-regression
 estimate_kind	synthetic_covariance_regression_not_dakota_error_bar
-unresolved_effects	actual_per_wheel_angles;setup_hysteresis;cam_state_model
+unresolved_effects	manual_ratio_to_individual_inside_outside_wheel_mapping;setup_hysteresis;cam_state_model
 independence_assertion	one shared source only

@@ -232,7 +232,7 @@ main =
   putStrLn "implementation\tAgda" >>
   putStrLn ("status\t" ++ statusText checksPass) >>
   putStrLn "case_id\tg2-passenger-half-turn" >>
-  putStrLn "theta_source_kind\tnominal_model_not_direct_observation" >>
+  putStrLn "theta_source_kind\tmanual_17.4_to_1_nominal_conversion" >>
   putStrLn ("caster_magnitude_deg\t" ++ showFloat g2Estimate) >>
   putStrLn ("jacobian.theta_right_deg\t" ++ showFloat (dThetaRight g2Jacobian)) >>
   putStrLn ("jacobian.theta_left_deg\t" ++ showFloat (dThetaLeft g2Jacobian)) >>

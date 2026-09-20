@@ -2,4 +2,4 @@ input_label	radius	source_kind	provenance
 theta_right_deg	5.0	historical_stress_test_not_measurement_uncertainty	H-007 nonlinear-regression fixture; not a Dakota tolerance or sigma
 theta_left_deg	5.0	historical_stress_test_not_measurement_uncertainty	H-007 nonlinear-regression fixture; not a Dakota tolerance or sigma
 gamma_right_deg	0.0	historical_stress_test_not_measurement_uncertainty	held fixed in the historical angle stress test
-gamma_left_deg	0.0	historical_stress_test_not_measurement_uncertainty	 held fixed in the historical angle stress test
+gamma_left_deg	0.0	historical_stress_test_not_measurement_uncertainty	held fixed in the historical angle stress test

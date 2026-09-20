@@ -1,5 +1,7 @@
 module CasterReceipt
 
+import Data.Text
+
 -- Independently evaluate the historical caster acceptance fixture.
 --
 -- The R and Haskell programs own TSV ingestion.  This typed Idriç kernel owns
@@ -229,7 +231,7 @@ main = do
   putStrLn "implementation\tIdriç"
   putStrLn ("status\t" ++ status_text checks_pass)
   putStrLn "case_id\tg2-passenger-half-turn"
-  putStrLn "theta_source_kind\tnominal_model_not_direct_observation"
+  putStrLn "theta_source_kind\tmanual_17.4_to_1_nominal_conversion"
   putStrLn ("caster_magnitude_deg\t" ++ show g2_estimate)
   putStrLn
     ("jacobian.theta_right_deg\t" ++

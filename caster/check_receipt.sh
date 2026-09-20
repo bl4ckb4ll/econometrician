@@ -19,7 +19,7 @@ assert_close() {
 
 test "$(field status)" = PASS
 test "$(field implementation)" = "$implementation"
-test "$(field theta_source_kind)" = nominal_model_not_direct_observation
+test "$(field theta_source_kind)" = manual_17.4_to_1_nominal_conversion
 test "$(field error_bar_status)" = not_computed
 test "$(field bounds_status)" = historical_stress_test_not_measurement_uncertainty
 assert_close caster_magnitude_deg 5.568798743106686 0.000000001
