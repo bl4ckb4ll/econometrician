@@ -24,12 +24,12 @@ values survived in conversation history. It is now preserved as G5 in
 | Ledger | Result | Arithmetic/model status | Exact transition that failed |
 |---|---|---|---|
 | H-001 | legacy RF 5.1° | source calculation unrecovered | A later reconstruction treated a remembered result and an unrecovered bootstrap as analyzable evidence. The original data, resampling unit, and outputs are missing. |
-| H-002 | driver 12.029°, passenger 6.015° | arithmetic correct for stated inputs | Driver `+0.5°` was transcribed as `+5°`; the fixed 17.4:1 road-wheel conversion was also unmeasured. |
-| H-003 | driver 5.095°, passenger 5.661° | nominal arithmetic correct | Correcting `+5` to `+0.5` repaired the gross result but left road-wheel angle and passenger direction provenance unresolved. |
+| H-002 | driver 12.029°, passenger 6.015° | arithmetic correct for stated inputs | Driver `+0.5°` was transcribed as `+5°`. The 17.4:1 nominal conversion came from the manual and was not the cause of this failure. |
+| H-003 | driver 5.095°, passenger 5.661° | nominal arithmetic correct | Correcting `+5` to `+0.5` repaired the gross result. The remaining limitation is that an overall manual ratio does not separately calibrate the two road wheels; passenger direction provenance also remained unresolved. |
 | H-004 | driver 11.463°, passenger 5.661°, cross 5.80° | sensitivities/arithmetic correct | The bad `+5` returned, and one straight-ahead roll correction was carried through turned steering states. |
-| H-005 | driver 7.63–9.75°; main fits 8.06–8.50° | code reproduces exactly | Conflicted transcription rows and an unmeasured steering map entered a robust fit. Huber weighting handled residuals, not row identity or shared systematic error. The fitted odd coefficient `B` was then discussed too much like physical caster. |
+| H-005 | driver 7.63–9.75°; main fits 8.06–8.50° | code reproduces exactly | Conflicted transcription rows and an assumed per-wheel map built from the valid overall ratio entered a robust fit. Huber weighting handled residuals, not row identity or shared systematic error. The fitted odd coefficient `B` was then discussed too much like physical caster. |
 | H-006 | 4.900±0.864° / 3.920±0.745° | first-order calculation correct under assumptions | `0.25°` camber and `5°` angle scales were assumptions, not measured standard deviations. Shared calibration was computed separately but never integrated into one covariance. A symmetric local bar hid nonlinear asymmetry. |
-| H-007 | G2 passenger 5.5688°, 5.6608°, 5.5236°; combined 5.5647° | nominal arithmetic and Jacobian correct | Close agreement across steering scales was read as stronger confirmation than warranted because every pair shared the same unmeasured steering conversion, setup, and model. |
+| H-007 | G2 passenger 5.5688°, 5.6608°, 5.5236°; combined 5.5647° | nominal arithmetic and Jacobian correct | Close agreement across steering scales was read as stronger confirmation than warranted because every pair shared the same manual-derived conversion, equal-angle assumption, setup, and model. |
 | H-008 | G4 driver 3.4805°, 3.5380–3.8918°, 2.5317°; combined 2.8772–2.9749°; later about 3.5±0.6° | pair arithmetic and recorded-input interval correct | The `±0.6` construction is not recoverable. Between-pair spread was a steering/model/path diagnostic, not independent sampling error. |
 | H-009 | seven-row 3-D fit 2.440° / 1.821° with narrow shape envelopes | conditional fit reproducible | A model-search acceptance envelope was liable to be read as measurement uncertainty; the passenger source was still provisional. |
 | H-010 | preferred 3.3° [2.8,3.7] / 2.7° [2.1,3.2] | qualitative model criticism useful | The interval rule and coverage meaning were not recorded. Model choice, full-lock rejection, and measurement uncertainty were mixed into one range. |
@@ -42,11 +42,21 @@ mistake.
 
 ## What kept going wrong
 
-### 1. Steering-wheel command was substituted for road-wheel angle
+### 1. A valid overall steering ratio was overextended into an exact per-wheel map
 
-This affects every early pair calculation and both generations of fitted
-models. The fixed 17.4:1 conversion or ideal Ackermann map was useful as a
-nominal model, but it was repeatedly treated as though it were measured input.
+The manual-derived 17.4:1 overall ratio is a valid nominal input, not an
+arbitrary guess. It gives `10.3448°`, `20.6897°`, and `31.0345°` for a half,
+one, and one-and-a-half steering-wheel turns. The mistake was narrower: some
+calculations treated that overall ratio, plus an assumed symmetric or
+ideal-Ackermann split, as an exact calibration of each tire angle.
+
+That distinction does **not** make a large angle uncertainty plausible. Ideal
+Ackermann changes the one-turn multiplier by only about `0.6%` in the preserved
+geometry. Reducing the G2 half-turn result from `5.5688°` to `3.5°` by steering
+angle alone would require about `16.60°` per road wheel, equivalent to roughly
+`10.84:1`, far from the manual's `17.4:1`. The old `+/-5°` exercise is therefore
+retained only as a nonlinear stress test, not as a Dakota tolerance or error
+bar.
 
 The G5 sweep makes the failure visible without choosing a corrected angle map:
 
@@ -112,14 +122,15 @@ driver/passenger bars without an undocumented covariance assumption.
 
 ### 6. Local linear propagation was used beyond a locally symmetric regime
 
-At the G2 half-turn point,
+At the G2 half-turn point, a deliberately extreme historical stress fixture
+used
 
 ```text
 theta = 10.3448275862 deg
 C     = 5.5687987431 deg
 ```
 
-With a historical `±5°` road-wheel bound and fixed camber difference, the
+With that `±5°` road-wheel stress radius and fixed camber difference, the
 first-order Jacobian gives the symmetric interval
 
 ```text
@@ -133,9 +144,11 @@ Direct nonlinear propagation gives
 = 5.5688 -1.7899/+5.1666 deg.
 ```
 
-The upper tail is badly missed. At the H-006 `22.5°` point the same issue is
-smaller but still visible: driver exact `4.0607–6.2353°` rather than symmetric
-`4.8996±1.0322°` for the shared `±5°` angle perturbation.
+The upper tail is badly missed. This demonstrates a propagation failure mode;
+it does not establish that `±5°` is a plausible input error. At the H-006
+`22.5°` point the same issue is smaller but still visible: driver exact
+`4.0607–6.2353°` rather than symmetric `4.8996±1.0322°` for the shared `±5°`
+angle perturbation.
 
 ### 7. Straight-ahead reference corrections were carried across steering states
 
@@ -281,6 +294,23 @@ current cross-caster error bar.
 
 The legacy low-level heterogeneous propagation helper remains for the existing
 benchmark. A final numerical error bar should use the named receipt path.
+
+`caster/` now makes that receipt path executable outside chat in five
+languages. The R and Haskell frontends read the same TSV observations and
+uncertainty-source records. Ithon, Agda, and Idriç independently recompute the
+G2 anchor and the regression invariants. The programs:
+
+- preserve the manual-derived nominal angle while refusing to invent its
+  uncertainty distribution (H-003/H-007);
+- emit no `±` for G2 because no empirical covariance was supplied (H-007);
+- label H-006's reproduced `0.863804°` propagation as illustrative, not a
+  Dakota confidence interval (H-006);
+- print both the linear and exact asymmetric nonlinear stress intervals
+  (H-006/H-007);
+- reject incompatible states, designed-position bootstrap units, and overlap
+  between bootstrap variation and explicit measurement error (H-001/H-005);
+- demonstrate that a shared systematic component does not shrink when three
+  pair estimates are averaged (H-007/H-012).
 
 ## Unresolved
 

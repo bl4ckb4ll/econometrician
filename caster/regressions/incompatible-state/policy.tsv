@@ -1,0 +1,5 @@
+key	value
+case_id	invalid-cross-state-pair
+estimate_kind	must_be_rejected
+unresolved_effects	all
+independence_assertion	

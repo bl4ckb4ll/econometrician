@@ -11,7 +11,11 @@ The strongest source limitation is itself documented in the prior audit: complet
 1. **The Sep10 passenger row order is conflicted.** The recovered timestamped verbal sequence runs maximum right `0°`, then `+0.25°`, `+0.5°`, straight `+1.125° to +1.25°`, `+2.5°`, `+4.25°`, maximum left `+6°`. The saved script labels its array `[0,0.25,0.5,1.125,2.5,4.25,6]` in the opposite left-to-right steering order. The old fit is therefore not a trustworthy physical caster result until the source mapping is rebuilt.
 2. **A later passenger correction mentioning `4.75°` is not mapped to a unique row/generation.** It cannot simply overwrite the script's `4.25°`.
 3. **The old script is internally reproducible.** Rerunning it preserves exact JSON structure/text and reproduces floats within `rtol=1e-7`, `atol=1e-9`; cross-runner linear-algebra variation below the four-decimal historical reporting precision is not treated as a substantive change. That proves software repeatability only; its data mapping and illustrative error model remain disputed.
-4. **Early caster is highly sensitive to steering-angle uncertainty.** At the nominal half-turn road-wheel angle, a `±5°` bounded road-wheel angle error changes the multiplier by roughly `−32%` to `+93%`. A narrow early caster error bar is not justified if road-wheel angle may be wrong by several degrees.
+4. **The nonlinear transform can be highly sensitive to a large angle error.**
+   At the manual-derived nominal half-turn angle, the historical `±5°` stress
+   radius changes the multiplier by roughly `−32%` to `+93%`. That fixture
+   demonstrates nonlinear propagation; it is not evidence that the Dakota
+   road-wheel angle is actually wrong by several degrees.
 5. **The measurement generations are not exchangeable.** Sep11 and Sep12 values differ enough from earlier sweeps that state change, intervention, settling, transcription, or procedure changes must remain explicit.
 6. **The passenger-front settling observation matters.** A roughly 0.5–1 cm downward change was physically observed after the cam was moved farther outward / steering was performed. The photos are qualitative; the observation is enough to motivate a latent state, not enough for precise photogrammetry.
 7. **The recoverable large Jacobian is underdetermined.** The implemented 14×26 candidate measurement Jacobian has rank 14 and nullity 12 at the diagnostic point. A pseudoinverse cannot be called an identified state solution.

@@ -129,3 +129,26 @@ inverse conditioning, nuisance effects, input error, correlated observations,
 and geometric curvature. Cross-linked with ASE, Fulton, and Coxeter. No new
 runtime method, general-purpose bootstrap, or measured truck calibration is
 claimed.
+
+## Caster uncertainty receipt programs
+
+[`caster/`](caster/) contains the deterministic program requested after the
+Dakota failure audit. R and Haskell implementations consume ordinary TSV
+records; independently checked Ithon, Agda, and Idriç kernels recompute the
+historical anchor and the important failure guards.
+
+The program keeps the manual-derived 17.4:1 road-wheel conversion as a nominal
+input. It does not invent an angle distribution around that value. A
+statistical error bar is emitted only when named covariance sources are
+provided, and non-empirical sources remain labeled illustrative. It also
+checks analytic derivatives numerically, propagates full covariance, preserves
+shared modes, compares linear and exact nonlinear bounds, rejects incompatible
+measurement states, rejects steering positions as IID bootstrap units, and
+rejects bootstrap/measurement-error overlap.
+
+```sh
+./caster/run_checks.sh
+```
+
+Unavailable language frontends are reported as `BLOCKED`; CI pins and runs all
+five named frontends.

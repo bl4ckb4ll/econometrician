@@ -21,7 +21,13 @@ The recovered timestamped Sep10 passenger sequence runs from maximum right `0°`
 
 ### 2. Steering-angle uncertainty can dominate the early caster calculation
 
-For the symmetric model `C = Delta_gamma/(2 sin theta)`, the nominal half-turn angle is only `10.3448°`. If actual road-wheel angle is uncertain by `±5°`, the multiplier changes by about `−32%` to `+93%`. This is before adding camber-read error, settling, calibration, or model error. Early measurements with poorly known road-wheel angle need broad bounds/feasible sets or symbolic epsilon, not a narrow manufactured sigma.
+For the symmetric model `C = Delta_gamma/(2 sin theta)`, the manual-derived
+nominal half-turn angle is `10.3448°`. A historical `±5°` stress test changes
+the multiplier by about `−32%` to `+93%`; this checks nonlinear propagation but
+is not evidence that the Dakota angle is uncertain by five degrees. No measured
+angle distribution is available, so the program retains the nominal value and
+the unresolved per-wheel calibration separately rather than manufacturing a
+sigma.
 
 ### 3. Measurement generations must remain separate
 

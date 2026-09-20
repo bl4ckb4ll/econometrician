@@ -1,0 +1,293 @@
+#!/usr/bin/env ithon
+
+# Ithon's current mandatory checker intentionally exposes only a small typed
+# core.  This is therefore an independently evaluated acceptance kernel, not a
+# second TSV parser.  The R and Haskell frontends own file ingestion; this file
+# recomputes the historical G2 anchor, Jacobian, nonlinear stress interval,
+# covariance example, shared-systematic modes, and resampling guards.
+
+import math
+import sys
+from builtins import format
+
+pi_value ∈ float ← math.pi
+rad_per_deg ∈ float ← pi_value / 180.0
+
+
+def require(condition ∈ bool, code ∈ str) → None:
+    if condition:
+        pass
+    else:
+        print("FAIL\t" + code)
+        sys.exit(2)
+
+
+def sine_degrees(angle ∈ float) → float:
+    radians ∈ float ← angle × rad_per_deg
+    answer ∈ float ← math.sin(radians)
+    return answer
+
+
+def cosine_degrees(angle ∈ float) → float:
+    radians ∈ float ← angle × rad_per_deg
+    answer ∈ float ← math.cos(radians)
+    return answer
+
+
+def absolute(value ∈ float) → float:
+    answer ∈ float ← math.fabs(value)
+    return answer
+
+
+def signed_coefficient(
+    theta_right ∈ float,
+    theta_left ∈ float,
+    gamma_right ∈ float,
+    gamma_left ∈ float,
+) → float:
+    right_sine ∈ float ← sine_degrees(theta_right)
+    left_sine ∈ float ← sine_degrees(theta_left)
+    denominator ∈ float ← right_sine - left_sine
+    require(absolute(denominator) > 0.000000000000001, "zero_steering_denominator")
+    return (gamma_right - gamma_left) / denominator
+
+
+def caster_magnitude(
+    theta_right ∈ float,
+    theta_left ∈ float,
+    gamma_right ∈ float,
+    gamma_left ∈ float,
+) → float:
+    signed ∈ float ← signed_coefficient(
+        theta_right, theta_left, gamma_right, gamma_left
+    )
+    return absolute(signed)
+
+
+def jacobian_theta_right(
+    theta_right ∈ float,
+    theta_left ∈ float,
+    gamma_right ∈ float,
+    gamma_left ∈ float,
+) → float:
+    numerator ∈ float ← gamma_right - gamma_left
+    denominator ∈ float ← sine_degrees(theta_right) - sine_degrees(theta_left)
+    signed ∈ float ← numerator / denominator
+    direction ∈ float ← 1.0
+    if signed < 0.0:
+        direction ← -1.0
+    return direction × (-numerator × cosine_degrees(theta_right) / (denominator × denominator)) × rad_per_deg
+
+
+def jacobian_theta_left(
+    theta_right ∈ float,
+    theta_left ∈ float,
+    gamma_right ∈ float,
+    gamma_left ∈ float,
+) → float:
+    numerator ∈ float ← gamma_right - gamma_left
+    denominator ∈ float ← sine_degrees(theta_right) - sine_degrees(theta_left)
+    signed ∈ float ← numerator / denominator
+    direction ∈ float ← 1.0
+    if signed < 0.0:
+        direction ← -1.0
+    return direction × (numerator × cosine_degrees(theta_left) / (denominator × denominator)) × rad_per_deg
+
+
+def jacobian_gamma_right(
+    theta_right ∈ float,
+    theta_left ∈ float,
+    gamma_right ∈ float,
+    gamma_left ∈ float,
+) → float:
+    numerator ∈ float ← gamma_right - gamma_left
+    denominator ∈ float ← sine_degrees(theta_right) - sine_degrees(theta_left)
+    signed ∈ float ← numerator / denominator
+    direction ∈ float ← 1.0
+    if signed < 0.0:
+        direction ← -1.0
+    return direction / denominator
+
+
+def jacobian_gamma_left(
+    theta_right ∈ float,
+    theta_left ∈ float,
+    gamma_right ∈ float,
+    gamma_left ∈ float,
+) → float:
+    return -jacobian_gamma_right(
+        theta_right, theta_left, gamma_right, gamma_left
+    )
+
+
+def finite_difference_theta_right(
+    theta_right ∈ float,
+    theta_left ∈ float,
+    gamma_right ∈ float,
+    gamma_left ∈ float,
+) → float:
+    step ∈ float ← 0.00001
+    plus ∈ float ← caster_magnitude(
+        theta_right + step, theta_left, gamma_right, gamma_left
+    )
+    minus ∈ float ← caster_magnitude(
+        theta_right - step, theta_left, gamma_right, gamma_left
+    )
+    return (plus - minus) / (2.0 × step)
+
+
+def exact_lower_with_symmetric_angle_radius(
+    theta ∈ float,
+    radius ∈ float,
+    gamma_difference ∈ float,
+) → float:
+    largest_denominator ∈ float ← 2.0 × sine_degrees(theta + radius)
+    return absolute(gamma_difference / largest_denominator)
+
+
+def exact_upper_with_symmetric_angle_radius(
+    theta ∈ float,
+    radius ∈ float,
+    gamma_difference ∈ float,
+) → float:
+    smallest_denominator ∈ float ← 2.0 × sine_degrees(theta - radius)
+    require(absolute(smallest_denominator) > 0.000000000000001,
+            "nonlinear_box_contains_steering_singularity")
+    return absolute(gamma_difference / smallest_denominator)
+
+
+def resampling_plan_valid(
+    sampling_structure ∈ str,
+    resampling_unit ∈ str,
+    independent_groups ∈ int,
+    overlaps_explicit_error ∈ bool,
+) → bool:
+    if sampling_structure == "designed":
+        if resampling_unit == "steering_position":
+            return False
+    if independent_groups < 2:
+        return False
+    if overlaps_explicit_error:
+        return False
+    return True
+
+
+# Timestamped Sep 10 G2 passenger half-turn fixture.
+theta_right ∈ float ← 180.0 / 17.4
+theta_left ∈ float ← -theta_right
+gamma_right ∈ float ← 0.5
+gamma_left ∈ float ← 2.5
+
+estimate ∈ float ← caster_magnitude(
+    theta_right, theta_left, gamma_right, gamma_left
+)
+j_theta_right ∈ float ← jacobian_theta_right(
+    theta_right, theta_left, gamma_right, gamma_left
+)
+j_theta_left ∈ float ← jacobian_theta_left(
+    theta_right, theta_left, gamma_right, gamma_left
+)
+j_gamma_right ∈ float ← jacobian_gamma_right(
+    theta_right, theta_left, gamma_right, gamma_left
+)
+j_gamma_left ∈ float ← jacobian_gamma_left(
+    theta_right, theta_left, gamma_right, gamma_left
+)
+numeric_theta_right ∈ float ← finite_difference_theta_right(
+    theta_right, theta_left, gamma_right, gamma_left
+)
+derivative_error ∈ float ← absolute(j_theta_right - numeric_theta_right)
+require(derivative_error < 0.00000001, "finite_difference_jacobian_mismatch")
+
+# The historical five-degree value is a stress radius, not a Dakota sigma.
+stress_radius ∈ float ← 5.0
+linear_radius ∈ float ← (
+    absolute(j_theta_right) × stress_radius
+    + absolute(j_theta_left) × stress_radius
+)
+linear_lower ∈ float ← estimate - linear_radius
+linear_upper ∈ float ← estimate + linear_radius
+nonlinear_lower ∈ float ← exact_lower_with_symmetric_angle_radius(
+    theta_right, stress_radius, gamma_right - gamma_left
+)
+nonlinear_upper ∈ float ← exact_upper_with_symmetric_angle_radius(
+    theta_right, stress_radius, gamma_right - gamma_left
+)
+
+# Shared additive zero modes cancel; symmetric magnitude error does not.
+common_steering_zero_loading ∈ float ← j_theta_right + j_theta_left
+common_camber_zero_loading ∈ float ← j_gamma_right + j_gamma_left
+symmetric_steering_magnitude_loading ∈ float ← j_theta_right - j_theta_left
+require(absolute(common_steering_zero_loading) < 0.000000000001,
+        "common_steering_zero_did_not_cancel")
+require(absolute(common_camber_zero_loading) < 0.000000000001,
+        "common_camber_zero_did_not_cancel")
+
+# H-006: correct arithmetic under explicitly illustrative diagonal inputs.
+h006_theta ∈ float ← 22.5
+h006_gamma_right ∈ float ← 3.75
+h006_gamma_left ∈ float ← 0.0
+h006_j1 ∈ float ← jacobian_theta_right(
+    h006_theta, -h006_theta, h006_gamma_right, h006_gamma_left
+)
+h006_j2 ∈ float ← jacobian_theta_left(
+    h006_theta, -h006_theta, h006_gamma_right, h006_gamma_left
+)
+h006_j3 ∈ float ← jacobian_gamma_right(
+    h006_theta, -h006_theta, h006_gamma_right, h006_gamma_left
+)
+h006_j4 ∈ float ← jacobian_gamma_left(
+    h006_theta, -h006_theta, h006_gamma_right, h006_gamma_left
+)
+h006_variance ∈ float ← (
+    h006_j1 × h006_j1 × 25.0
+    + h006_j2 × h006_j2 × 25.0
+    + h006_j3 × h006_j3 × 0.0625
+    + h006_j4 × h006_j4 × 0.0625
+)
+h006_standard_deviation ∈ float ← math.sqrt(h006_variance)
+
+# Three estimates with variance 0.25 each and one shared variance 1.0.
+# Equal GLS weights leave the shared systematic intact.
+combined_variance ∈ float ← 1.0 + 0.25 / 3.0
+naive_independent_variance ∈ float ← (1.0 + 0.25) / 3.0
+require(combined_variance > naive_independent_variance,
+        "shared_systematic_shrank_as_independent_noise")
+
+designed_position_plan_valid ∈ bool ← resampling_plan_valid(
+    "designed", "steering_position", 7, False
+)
+require(designed_position_plan_valid == False, "designed_positions_accepted_as_iid")
+double_count_plan_valid ∈ bool ← resampling_plan_valid(
+    "clustered", "sweep", 2, True
+)
+require(double_count_plan_valid == False, "bootstrap_error_overlap_accepted")
+
+print("receipt_version\tcaster-uncertainty-v1")
+print("implementation\tIthon")
+print("case_id\tg2-passenger-half-turn")
+print("status\tPASS")
+print("theta_source_kind\tnominal_model_not_direct_observation")
+print("caster_magnitude_deg\t", format(estimate, ".12f"), sep="")
+print("jacobian.theta_right_deg\t", format(j_theta_right, ".12f"), sep="")
+print("jacobian.theta_left_deg\t", format(j_theta_left, ".12f"), sep="")
+print("jacobian.gamma_right_deg\t", format(j_gamma_right, ".12f"), sep="")
+print("jacobian.gamma_left_deg\t", format(j_gamma_left, ".12f"), sep="")
+print("finite_difference_max_abs_error\t", format(derivative_error, ".12f"), sep="")
+print("error_bar_status\tnot_computed")
+print("bounds_status\thistorical_stress_test_not_measurement_uncertainty")
+print("linear_interval_deg\t", format(linear_lower, ".12f"), ",",
+      format(linear_upper, ".12f"), sep="")
+print("nonlinear_interval_deg\t", format(nonlinear_lower, ".12f"), ",",
+      format(nonlinear_upper, ".12f"), sep="")
+print("common_steering_zero_loading\t", format(common_steering_zero_loading, ".12f"), sep="")
+print("common_camber_zero_loading\t", format(common_camber_zero_loading, ".12f"), sep="")
+print("symmetric_steering_magnitude_loading\t",
+      format(symmetric_steering_magnitude_loading, ".12f"), sep="")
+print("h006_propagated_standard_deviation_deg\t",
+      format(h006_standard_deviation, ".12f"), sep="")
+print("h006_error_bar_status\tillustrative_only_not_error_bar")
+print("three_pair_correlated_variance\t", format(combined_variance, ".12f"), sep="")
+print("three_pair_naive_variance\t", format(naive_independent_variance, ".12f"), sep="")
+print("designed_steering_positions_bootstrap\tREJECTED")
+print("bootstrap_explicit_error_overlap\tREJECTED")
