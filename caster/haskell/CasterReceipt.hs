@@ -85,6 +85,10 @@ signedCoefficient _ = error "four inputs required"
 casterMagnitude :: [Double] -> Double
 casterMagnitude = abs . signedCoefficient
 
+oddEvenComponents :: Double -> Double -> (Double, Double)
+oddEvenComponents gammaPlus gammaMinus =
+  ((gammaPlus - gammaMinus) / 2.0, (gammaPlus + gammaMinus) / 2.0)
+
 analyticJacobian :: [Double] -> [Double]
 analyticJacobian [thetaRight, thetaLeft, gammaRight, gammaLeft] =
   let tr = thetaRight * radPerDeg
@@ -330,7 +334,7 @@ readBounds path center jacobian = do
               (centerOutput - linearRadius) (centerOutput + linearRadius)
               lower upper (centerOutput - lower) (upper - centerOutput)))
 
-data ResamplingReceipt = ResamplingReceipt String Int
+data ResamplingReceipt = ResamplingReceipt String Int Int
 
 auditResampling
   :: Maybe FilePath -> [String] -> IO (Maybe ResamplingReceipt)
@@ -338,7 +342,9 @@ auditResampling Nothing _ = pure Nothing
 auditResampling (Just path) explicitEffects = do
   (header, rows) <- readTsv path
   require (header ==
-    ["sampling_structure", "resampling_unit", "group_id", "covered_effects", "provenance"])
+    [ "sampling_structure", "resampling_unit", "group_id", "pair_id", "pair_role"
+    , "covered_effects", "provenance"
+    ])
     "invalid_resampling_header" ""
   let structures = nub (map (`field` "sampling_structure") rows)
       units = nub (map (`field` "resampling_unit") rows)
@@ -352,9 +358,29 @@ auditResampling (Just path) explicitEffects = do
       overlap = filter (`elem` explicitEffects) effects
   require (null overlap) "bootstrap_measurement_error_double_count"
     (intercalate ";" overlap)
-  let groupCount = length (nub (map (`field` "group_id") rows))
+  let groups = nub (map (`field` "group_id") rows)
+      groupCount = length groups
   require (groupCount >= 2) "fewer_than_two_resampling_groups" ""
-  pure (Just (ResamplingReceipt unit groupCount))
+  require (all (not . null . (`field` "pair_id")) rows)
+    "missing_odd_even_pair_id" ""
+  require (all ((`elem` ["plus", "minus"]) . (`field` "pair_role")) rows)
+    "invalid_odd_even_pair_role" ""
+  let pairsFor group =
+        sort (nub [field row "pair_id" | row <- rows, field row "group_id" == group])
+      referencePairs = pairsFor (head groups)
+  require (all ((== referencePairs) . pairsFor) groups)
+    "odd_even_pair_set_mismatch_between_resampling_groups" ""
+  forM_ groups $ \group ->
+    forM_ referencePairs $ \pairId -> do
+      let roles = sort
+            [ field row "pair_role"
+            | row <- rows
+            , field row "group_id" == group
+            , field row "pair_id" == pairId
+            ]
+      require (roles == ["minus", "plus"])
+        "odd_even_pair_incomplete_within_resampling_group" (group ++ ":" ++ pairId)
+  pure (Just (ResamplingReceipt unit groupCount (length referencePairs)))
 
 main :: IO ()
 main = do
@@ -369,6 +395,7 @@ main = do
   let jacobian = analyticJacobian inputs
       numerical = finiteDifferenceJacobian inputs
       derivativeError = maximum (zipWith (\a b -> abs (a - b)) jacobian numerical)
+      (oddComponent, evenComponent) = oddEvenComponents (inputs !! 2) (inputs !! 3)
   require (derivativeError <= 1e-8) "finite_difference_jacobian_mismatch" ""
   covariance <- readCovarianceSources caseDir policy jacobian
   bounds <- readBounds (caseDir </> "bounds.tsv") inputs jacobian
@@ -400,6 +427,8 @@ main = do
   emit "input_values" (intercalate "," (map formatNumber inputs))
   emit "signed_coefficient_deg" (formatNumber (signedCoefficient inputs))
   emit "caster_magnitude_deg" (formatNumber (casterMagnitude inputs))
+  emit "odd_camber_component_deg" (formatNumber oddComponent)
+  emit "even_camber_component_deg" (formatNumber evenComponent)
   emit "jacobian_values" (intercalate "," (map formatNumber jacobian))
   emit "jacobian_units" "deg_per_deg,deg_per_deg,deg_per_deg,deg_per_deg"
   emit "finite_difference_max_abs_error" (formatNumber derivativeError)
@@ -430,10 +459,12 @@ main = do
         [formatNumber (nonlinearMinus receipt), formatNumber (nonlinearPlus receipt)])
   case resampling of
     Nothing -> emit "resampling_status" "not_requested"
-    Just (ResamplingReceipt unit count) -> do
+    Just (ResamplingReceipt unit count pairCount) -> do
       emit "resampling_status" "plan_validated_not_executed"
       emit "resampling_unit" unit
       emit "independent_group_count" (show count)
+      emit "resampling_pairing" "symmetric_odd_even_pairs_preserved"
+      emit "symmetric_pair_count" (show pairCount)
   -- Analytically soluble regression: independent variance 0.25 on each of
   -- three estimates plus one shared variance 1.0.
   emit "three_pair_correlated_variance" (formatNumber (1.0 + 0.25 / 3.0))
