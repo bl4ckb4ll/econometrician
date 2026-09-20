@@ -164,6 +164,8 @@ class ResamplingPlan:
     group_ids: tuple[str, ...]
     covered_effects: tuple[str, ...]
     provenance: str
+    pair_ids: tuple[str, ...] = ()
+    pair_roles: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -173,6 +175,8 @@ class ResamplingReceipt:
     independent_group_count: int
     covered_effects: tuple[str, ...]
     provenance: str
+    pairing_status: str = "not_declared"
+    symmetric_pair_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -413,12 +417,20 @@ def nonlinear_box_receipt(
     )
 
 
+def odd_even_components(gamma_plus: float, gamma_minus: float) -> tuple[float, float]:
+    """Return the odd and even camber components for one symmetric steering pair."""
+    if not np.isfinite(gamma_plus) or not np.isfinite(gamma_minus):
+        raise UncertaintyContractError("nonfinite_odd_even_input")
+    return ((gamma_plus - gamma_minus) / 2.0,
+            (gamma_plus + gamma_minus) / 2.0)
+
+
 def audit_resampling_plan(
     plan: ResamplingPlan,
     *,
     explicit_error_sources: Sequence[CovarianceUncertainty | LatentSystematic] = (),
 ) -> ResamplingReceipt:
-    """Validate the sampling unit and refuse overlapping uncertainty coverage."""
+    """Validate the sampling unit, odd/even pairing, and uncertainty coverage."""
     if plan.sampling_structure == "designed":
         raise UncertaintyContractError(
             "designed_positions_not_iid: steering positions are design points, not sampling units"
@@ -443,6 +455,39 @@ def audit_resampling_plan(
             "dependent_observations_labeled_iid: repeated group id found"
         )
 
+    pairing_status = "not_declared"
+    symmetric_pair_count = 0
+    if bool(plan.pair_ids) != bool(plan.pair_roles):
+        raise UncertaintyContractError("incomplete_odd_even_pair_metadata")
+    if plan.pair_ids:
+        if len(plan.pair_ids) != len(plan.group_ids) or len(plan.pair_roles) != len(plan.group_ids):
+            raise UncertaintyContractError("odd_even_pair_metadata_length_mismatch")
+        if any(not pair_id for pair_id in plan.pair_ids):
+            raise UncertaintyContractError("missing_odd_even_pair_id")
+        if any(role not in {"plus", "minus"} for role in plan.pair_roles):
+            raise UncertaintyContractError("invalid_odd_even_pair_role")
+
+        by_group: dict[str, dict[str, list[str]]] = {}
+        for group_id, pair_id, role in zip(plan.group_ids, plan.pair_ids, plan.pair_roles):
+            by_group.setdefault(group_id, {}).setdefault(pair_id, []).append(role)
+        reference_pairs: tuple[str, ...] | None = None
+        for group_id, pairs in by_group.items():
+            pair_set = tuple(sorted(pairs))
+            if reference_pairs is None:
+                reference_pairs = pair_set
+            elif pair_set != reference_pairs:
+                raise UncertaintyContractError(
+                    "odd_even_pair_set_mismatch_between_resampling_groups"
+                )
+            for pair_id, roles in pairs.items():
+                if sorted(roles) != ["minus", "plus"]:
+                    raise UncertaintyContractError(
+                        "odd_even_pair_incomplete_within_resampling_group: "
+                        f"group={group_id!r} pair={pair_id!r}"
+                    )
+        symmetric_pair_count = len(reference_pairs or ())
+        pairing_status = "symmetric_odd_even_pairs_preserved"
+
     explicit_effects: dict[str, str] = {}
     for source in explicit_error_sources:
         source_id = _source_identity(source)
@@ -460,6 +505,8 @@ def audit_resampling_plan(
         independent_group_count=group_count,
         covered_effects=plan.covered_effects,
         provenance=plan.provenance,
+        pairing_status=pairing_status,
+        symmetric_pair_count=symmetric_pair_count,
     )
 
 
