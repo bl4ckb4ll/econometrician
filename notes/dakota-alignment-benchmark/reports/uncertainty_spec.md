@@ -60,3 +60,30 @@ Forward propagation returns separate components:
 - model-uncertainty notes.
 
 They are not collapsed into a single `±sigma` by the library.
+
+## Audited final-bar path
+
+`build_covariance_receipt` is the stricter path for a reported numerical error
+bar. It requires:
+
+- a Jacobian with named inputs/outputs and units;
+- covariance labels in exactly the same order as the Jacobian inputs;
+- a stable source ID and provenance for every contribution;
+- an explicit independence assertion before separate covariance sources are
+  added;
+- non-overlapping atomic effect IDs, so one physical uncertainty is not entered
+  twice under different names.
+
+Shared systematics enter through one latent loading/covariance block. The
+receipt retains every propagated contribution and the total rather than only a
+final square root.
+
+`nonlinear_box_receipt` compares the local `|J|r` interval with direct nonlinear
+evaluation. It reports asymmetric lower/upper deviations. A corner envelope is
+labeled a complete box interval only when the caller separately establishes
+that the extrema occur at corners; otherwise it remains a diagnostic sample.
+
+`require_compatible_observations` rejects estimates assembled across different
+generations, adjustment states, sides, sweeps, or approach directions.
+`audit_resampling_plan` rejects designed steering positions as IID units and
+refuses a bootstrap effect that is already covered by an explicit error source.

@@ -56,3 +56,23 @@ The two sides also should not automatically be treated as independent replicatio
 What this diagnostic establishes is narrower: steering-angle calibration/model error is a structurally distinct source that should be represented separately in the Jacobian/error-in-variables analysis. It does not by itself establish actual road-wheel angles, a corrected caster value, or a probability distribution for the error.
 
 A direct road-wheel-angle calibration sweep would turn part of this source from an unresolved model/input error into measured input data. Until then, preserve a named steering-angle epsilon or bounded feasible set rather than inventing a narrow Gaussian error bar.
+
+## Combination receipt and dependence
+
+The audited API does not infer independence from a list of covariance objects.
+Adding more than one source requires a written zero-cross-covariance assertion.
+Every source has a stable ID and a set of atomic effects it covers; duplicate
+effects are refused.
+
+When several caster estimates are combined, use their complete estimate
+covariance. A shared unit-variance systematic plus independent variance `0.25`
+on each of three pair estimates gives variance
+
+```text
+1 + 0.25/3 = 1.083333...
+```
+
+for their equal-weight mean. Treating each total variance `1.25` as independent
+would instead report `1.25/3 = 0.416667`, incorrectly shrinking the shared
+source. This regression is based on the dependence structure of the three G2
+pairs; it does not assign those illustrative numbers to the truck.

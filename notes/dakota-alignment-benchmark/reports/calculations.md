@@ -80,4 +80,4 @@ A one-flat bolt rotation therefore does **not** imply a fixed linear pivot displ
 
 ## Old fit reproducibility
 
-The saved `dakota_caster_recheck.py` regenerates its saved JSON byte-for-byte. That establishes implementation reproducibility, not correctness of the disputed row mapping or its illustrative uncertainty assumptions.
+The saved `dakota_caster_recheck.py` regenerates parsed JSON identical to its saved result; insignificant formatting differs. That establishes implementation reproducibility, not correctness of the disputed row mapping or its illustrative uncertainty assumptions.

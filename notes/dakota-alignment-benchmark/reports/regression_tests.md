@@ -26,8 +26,22 @@ Current checks:
 - preservation of named unresolved discrepancies;
 - fixed rear-looking-forward cam-rotation convention;
 - benchmark refusal to claim unrecovered full-physical Jacobian, truck curvature, curvature Jacobian, or epsilon mixed-product rule.
+- exact reproduction of the historical `12.0292°`, `8.0643°`, `5.5688°`, and
+  `4.6±1.0°` failure-ledger entries;
+- rejection of measurements from incompatible adjustment states;
+- rejection of a covariance whose variable order differs from the Jacobian;
+- source-by-source covariance receipts with units and provenance;
+- refusal to add separate covariance sources without an independence assertion;
+- refusal to count one atomic uncertainty effect twice;
+- shared systematic error that does not shrink as independent pair noise;
+- the historical half-turn `±5°` nonlinear interval, including its asymmetric
+  `-1.7899/+5.1666°` deviations;
+- refusal to bootstrap the seven designed steering positions as IID units;
+- refusal to cover the same gauge-repeatability effect in both a bootstrap and
+  an explicit measurement-error source;
+- preservation and recomputation of all fourteen G5 reset-sweep rows.
 
-At package build time: **22 tests passed**.
+At failure-audit build time: **36 tests passed**.
 
 Run from the package root:
 
@@ -35,4 +49,4 @@ Run from the package root:
 python -m pytest -q
 ```
 
-The sibling legacy `../dakota-caster-recheck/dakota_caster_recheck.py` also regenerates its saved JSON byte-for-byte in the current environment. That legacy receipt is deliberately separate from the new benchmark tests because it validates old implementation reproducibility, not source correctness.
+The sibling legacy `../dakota-caster-recheck/dakota_caster_recheck.py` also regenerates parsed JSON identical to its saved result in the current environment. Formatting differences are ignored. That legacy receipt is deliberately separate from the new benchmark tests because it validates old implementation reproducibility, not source correctness.

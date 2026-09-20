@@ -1,22 +1,8 @@
-test_analytic_derivatives_match_centered_finite_difference (test_scalar_slice.ScalarSliceTests.test_analytic_derivatives_match_centered_finite_difference) ... ok
-test_cam_state_gap_is_preserved_not_invented (test_scalar_slice.ScalarSliceTests.test_cam_state_gap_is_preserved_not_invented) ... ok
-test_cli_output_is_byte_deterministic (test_scalar_slice.ScalarSliceTests.test_cli_output_is_byte_deterministic) ... ok
-test_common_camber_zero_shift_cancels_first_order (test_scalar_slice.ScalarSliceTests.test_common_camber_zero_shift_cancels_first_order) ... ok
-test_common_steering_zero_shift_cancels_first_order (test_scalar_slice.ScalarSliceTests.test_common_steering_zero_shift_cancels_first_order) ... ok
-test_equal_opposite_steering_magnitude_error_does_not_cancel (test_scalar_slice.ScalarSliceTests.test_equal_opposite_steering_magnitude_error_does_not_cancel) ... ok
-test_expected_jacobian (test_scalar_slice.ScalarSliceTests.test_expected_jacobian) ... ok
-test_historical_magnitude_agreement_and_direction_discrepancy (test_scalar_slice.ScalarSliceTests.test_historical_magnitude_agreement_and_direction_discrepancy) ... ok
-test_legacy_illustrative_sigmas_are_not_used_as_inputs (test_scalar_slice.ScalarSliceTests.test_legacy_illustrative_sigmas_are_not_used_as_inputs) ... ok
-test_nominal_angle_conversion (test_scalar_slice.ScalarSliceTests.test_nominal_angle_conversion) ... ok
-test_printed_multiplier_rounding_discrepancy_is_small_and_explicit (test_scalar_slice.ScalarSliceTests.test_printed_multiplier_rounding_discrepancy_is_small_and_explicit) ... ok
-test_raw_observation_identity_and_order (test_scalar_slice.ScalarSliceTests.test_raw_observation_identity_and_order) ... ok
-test_side_generation_and_sign_metadata (test_scalar_slice.ScalarSliceTests.test_side_generation_and_sign_metadata) ... ok
-test_sign_reversal_if_camber_endpoints_swapped (test_scalar_slice.ScalarSliceTests.test_sign_reversal_if_camber_endpoints_swapped) ... ok
-test_signed_and_magnitude_arithmetic (test_scalar_slice.ScalarSliceTests.test_signed_and_magnitude_arithmetic) ... ok
-test_symbolic_epsilons_survive_output (test_scalar_slice.ScalarSliceTests.test_symbolic_epsilons_survive_output) ... ok
-test_symmetric_multiplier (test_scalar_slice.ScalarSliceTests.test_symmetric_multiplier) ... ok
+Scalar-slice and stage-reconstruction suite: 37 tests passed.
 
-----------------------------------------------------------------------
-Ran 17 tests in 1.147s
-
-OK
+Receipt scope:
+- exact G2 half/full/lock arithmetic and Jacobian;
+- G4 stage separation and range preservation;
+- all fourteen G5 reset-sweep rows and recomputed pair/combined values;
+- deterministic CLI output;
+- explicit refusal to manufacture a confidence interval from historical bounds.

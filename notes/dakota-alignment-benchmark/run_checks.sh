@@ -13,6 +13,8 @@ else
   exit 0
 fi
 PYTHONDONTWRITEBYTECODE=1 python "$LEGACY/dakota_caster_recheck.py" > /tmp/dakota_caster_recheck_results.json
-cmp /tmp/dakota_caster_recheck_results.json "$LEGACY/dakota_caster_recheck_results.json"
+python -m json.tool --sort-keys --compact /tmp/dakota_caster_recheck_results.json > /tmp/dakota_caster_recheck_results.normalized.json
+python -m json.tool --sort-keys --compact "$LEGACY/dakota_caster_recheck_results.json" > /tmp/dakota_caster_recheck_saved.normalized.json
+cmp /tmp/dakota_caster_recheck_results.normalized.json /tmp/dakota_caster_recheck_saved.normalized.json
 printf '%s
-' 'legacy caster script output: byte-identical'
+' 'legacy caster script output: parsed JSON identical (stored whitespace intentionally differs)'

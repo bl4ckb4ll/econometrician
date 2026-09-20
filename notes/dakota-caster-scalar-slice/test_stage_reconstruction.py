@@ -72,9 +72,47 @@ class StageReconstructionTests(unittest.TestCase):
                          "provisional_not_benchmark_truth")
         self.assertIsNone(self.result["G4_passenger"]["caster_result"])
 
-    def test_post_reverse_state_remains_unmeasured(self):
-        self.assertEqual(self.result["I2"]["current_post_reverse_caster_status"],
-                         "unmeasured in preserved full sweep")
+    def test_immediate_post_reverse_gap_and_later_reset_sweep_are_distinct(self):
+        self.assertIn("no full sweep", self.result["I2"]["immediate_post_reverse_caster_status"])
+        self.assertIn("G5", self.result["I2"]["later_measurement_status"])
+
+    def test_G5_reset_sweep_pairwise_results_preserve_steering_scale_disagreement(self):
+        g5 = self.result["G5_reset_sweep"]
+        driver = {p["pair_id"]: p for p in g5["driver"]["pair_results"]}
+        passenger = {p["pair_id"]: p for p in g5["passenger"]["pair_results"]}
+        self.assertAlmostEqual(driver["half_turn"]["magnitude_interval_deg"][0],
+                               3.480499214441678, places=12)
+        self.assertAlmostEqual(driver["full_turn"]["magnitude_interval_deg"][0],
+                               4.953214169583139, places=12)
+        self.assertAlmostEqual(driver["full_turn"]["magnitude_interval_deg"][1],
+                               5.30701518169622, places=12)
+        self.assertAlmostEqual(driver["lock"]["magnitude_interval_deg"][0],
+                               3.222100783405561, places=12)
+        self.assertAlmostEqual(passenger["half_turn"]["magnitude_interval_deg"][0],
+                               1.3921996857766714, places=12)
+        self.assertAlmostEqual(passenger["full_turn"]["magnitude_interval_deg"][0],
+                               2.122806072678488, places=12)
+        lo, hi = passenger["lock"]["magnitude_interval_deg"]
+        self.assertAlmostEqual(lo, 2.0713505036178606, places=12)
+        self.assertAlmostEqual(hi, 2.3015005595754006, places=12)
+        self.assertIn("pair disagreement", g5["interpretation"])
+
+    def test_G5_nominal_combination_is_diagnostic_not_an_error_bar(self):
+        g5 = self.result["G5_reset_sweep"]
+        self.assertEqual(g5["status"], "same-session raw sweep; nominal angles only")
+        self.assertAlmostEqual(
+            g5["driver"]["nominal_combined_magnitude_interval_deg"][0],
+            3.7185422300615953, places=12)
+        self.assertAlmostEqual(
+            g5["driver"]["nominal_combined_magnitude_interval_deg"][1],
+            3.816236683559704, places=12)
+        self.assertAlmostEqual(
+            g5["passenger"]["nominal_combined_magnitude_interval_deg"][0],
+            2.0371134855620916, places=12)
+        self.assertAlmostEqual(
+            g5["passenger"]["nominal_combined_magnitude_interval_deg"][1],
+            2.187295489132154, places=12)
+        self.assertIn("rejected", self.result["model_boundary"]["sep17_weighted_result_status"])
 
     def test_legacy_eight_degree_result_is_rejected(self):
         boundary = self.result["model_boundary"]
@@ -126,6 +164,7 @@ class StageReconstructionTests(unittest.TestCase):
         self.assertEqual(b["G1_driver_rows_retained_but_rejected"], 7)
         self.assertEqual(b["G1_passenger_rows_retained_but_rejected"], 7)
         self.assertEqual(b["G4_passenger_rows_retained_but_provisional"], 7)
+        self.assertEqual(b["G5_reset_rows_retained"], 14)
         self.assertIn("not_used", b["secondary_reconstruction_records_status"])
         self.assertIn("not silently substituted", b["unmapped_4_75_correction_status"])
 

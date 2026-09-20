@@ -1,6 +1,6 @@
 {
   "benchmark_name": "2005 Dodge Dakota alignment evidence benchmark",
-  "version": "2026-09-12-audit-1",
+  "version": "2026-09-20-failure-audit-2",
   "acceptance_status": "PARTIAL / NOT YET ACCEPTED FOR REUSABLE PHYSICAL THEORY",
   "why_not_accepted": [
     "complete original conversation transcript corpus was not available to the recovered audit",
@@ -17,7 +17,7 @@
   "contradictions": "data/contradictions.jsonl",
   "interventions": "data/interventions.csv",
   "conventions": "data/conventions.json",
-  "measurement_generations": ["G0 ride-height/setup","G1 Sep7 handwritten sweep","G2 Sep10 timestamped sweep/note","G3 Sep11 changed-state spot readings","G4 Sep12 post-adjustment sweep","I0-I2 intervention states"],
+  "measurement_generations": ["G0 ride-height/setup","G1 Sep7 handwritten sweep","G2 Sep10 timestamped sweep/note","G3 Sep11 changed-state spot readings","G4 Sep12 post-adjustment sweep","I0-I2 intervention states","G5 Sep16 reset sweep"],
   "state_model": {
     "physical_state_status": "ontology only; insufficient verified evidence for a single numeric full suspension state",
     "candidate_measurement_state": "26 components in data/jacobian_spec.json",
@@ -28,7 +28,7 @@
   "curvature": {"nearest_curve_general_formula":"validated as general math only","truck_specific_curvature":"not recovered","curvature_jacobian":"definition not recovered; implementation refuses to invent one"},
   "epsilon": {"epsilon_squared_zero":"intended for unresolved-tolerance object in current mission","mixed_products":"unresolved in recovered design record; code requires explicit square_free or first_order_ideal mode"},
   "inverse_uncertainty": {"meaning":"inverse image of uncertain observation set under model, with rank/branch/constraint checks","not_assumed":"1/sigma or Sigma^-1 by default"},
-  "tests": "22 regression/invariant tests passing at audit build time; legacy script output byte-identical",
+  "tests": "36 regression/invariant tests passing at failure-audit build time; legacy script parsed JSON identical",
   "repository_lineage": "reports/downstream_map.md",
   "evidence_categories": ["observation","convention","derived_result","uncertainty_statement","interpretation_model"]
 }

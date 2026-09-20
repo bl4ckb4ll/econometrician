@@ -1,6 +1,6 @@
 # Dodge Dakota alignment audit and mathematical benchmark
 
-**Audit version:** 2026-09-12-audit-1  
+**Audit version:** 2026-09-20-failure-audit-2
 **Current acceptance:** **PARTIAL / NOT YET ACCEPTED FOR REUSABLE PHYSICAL THEORY**
 
 This package reconstructs the recoverable 2005 Dodge Dakota alignment record and separates five evidence levels throughout:
@@ -58,6 +58,9 @@ The record contains ordinary Jacobian ideas, a sweep second derivative, and the 
 15. **Regression and invariant tests** — `tests/`, `run_checks.sh`, `test_receipt_public.txt`, and `reports/regression_tests.md`.
 16. **Downstream map** — `reports/downstream_map.md`.
 17. **Required future measurements** — `reports/future_measurements.md`.
+18. **Caster failure audit** — `reports/caster_failure_audit.md` and
+    `data/caster_failure_ledger.csv`, including the Sep16 G5 reset sweep retained
+    in the active scalar-reconstruction branch.
 
 Additional requested phases are covered by `reports/sequential_inference_and_system_identification.md` and `reports/evidence_findings.md`.
 
@@ -75,8 +78,9 @@ The prior conversation audit states that it could not recover complete original 
 
 Current receipt:
 
-- 22 new benchmark tests pass;
-- the recovered legacy caster script regenerates its saved JSON byte-for-byte.
+- 36 benchmark tests pass;
+- the recovered legacy caster script regenerates parsed JSON identical to its
+  saved result (formatting is deliberately ignored).
 
 The second result demonstrates old-code reproducibility only. It does not resolve the passenger row-direction/value conflicts.
 

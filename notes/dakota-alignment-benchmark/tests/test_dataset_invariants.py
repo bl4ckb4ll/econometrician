@@ -54,6 +54,35 @@ def test_discrepancy_ledger_keeps_unresolved_conflicts():
     assert "UNRECOVERED" in by_id["D-015"]["current_disposition"]
 
 
+def test_caster_failure_ledger_preserves_embarrassing_results_and_error_status():
+    rows = read_csv("data/caster_failure_ledger.csv")
+    assert len(rows) == 12
+    by_id = {row["id"]: row for row in rows}
+    assert len(by_id) == len(rows)
+    assert "12.0292" in by_id["H-002"]["estimate"]
+    assert "8.0643" in by_id["H-005"]["estimate"]
+    assert "5.5687987431" in by_id["H-007"]["estimate"]
+    assert "4.6 +/-1.0" in by_id["H-012"]["estimate"]
+    assert "arithmetic" in by_id["H-002"]["what_was_correct"]
+    assert "not caused by a bad Jacobian" in by_id["H-005"]["corrected_interpretation"]
+    assert "construction not recovered" in by_id["H-008"]["reported_uncertainty"]
+    assert "cannot be reconstructed" in by_id["H-012"]["what_was_wrong"]
+
+
+def test_G5_reset_sweep_is_one_state_and_one_ordered_sweep():
+    rows = read_csv("../dakota-caster-scalar-slice/g5_reset_sweep.csv")
+    assert len(rows) == 14
+    assert {row["generation"] for row in rows} == {"G5"}
+    assert {row["adjustment_state"] for row in rows} == {
+        "passenger_front_returned_only_driver_rear_displaced"
+    }
+    assert {row["sweep_id"] for row in rows} == {"sep16_reset"}
+    assert {row["approach_direction"] for row in rows} == {
+        "max_left_to_max_right"
+    }
+    assert {row["side"] for row in rows} == {"driver", "passenger"}
+
+
 def test_cam_rotation_viewpoint_is_rear_looking_forward():
     conventions = json.loads((ROOT / "data/conventions.json").read_text())
     cam = conventions["cam_rotation"]

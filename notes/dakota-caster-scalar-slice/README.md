@@ -105,7 +105,7 @@ canonical transcription was not recovered. No passenger G4 caster is promoted.
 The reconstruction keeps the stages separate:
 
 ```text
-I0 -> G2 -> G3 -> I1 -> G4 -> I2
+I0 -> G2 -> G3 -> I1 -> G4 -> I2 -> G5
 ```
 
 - `I0`: rear-driver cam one-flat experiment, then approximately returned;
@@ -117,9 +117,38 @@ I0 -> G2 -> G3 -> I1 -> G4 -> I2
   0.5–1 cm after the move/steering path.
 - `G4`: Sep 12 sweep before the first reverse passenger-front move.
 - `I2`: passenger-front pivot moved back inward from near fully outboard.
+- `G5`: Sep 16 reset-state sweep after the passenger-front cam was returned;
+  only the rear-driver cam was reported displaced.
 
-There is no preserved full sweep after `I2`. The post-reverse/current caster
-state is therefore unmeasured in this reconstruction.
+There is no preserved full sweep immediately after `I2`. A later reset-state
+`G5` sweep was recovered from the Sep 16 conversation and is kept as a new
+generation rather than retroactively filling that gap.
+
+### G5 Sep 16 reset-state sweep
+
+The user reported that the passenger-front cam had been returned and only the
+rear-driver cam remained displaced. Hood/reference endpoints were restored to
+`47.5 in / 47.5 in`; a deliberate reference test produced `46 in / 49 in`.
+The ordered sweep ran maximum-left to maximum-right.
+
+Under the same nominal equal-angle steering conversion, the symmetric-pair
+magnitudes are:
+
+| side | half turn | full turn | lock |
+|---|---:|---:|---:|
+| driver | 3.4805° | 4.9532–5.3070° | 3.2221° |
+| passenger | 1.3922° | 2.1228° | 2.0714–2.3015° |
+
+The change with steering scale is not independent confirmation and is not
+sampling scatter. All three pairs share the same commanded-steering conversion,
+setup, state, gauge, and sweep path. The full raw rows are in
+`g5_reset_sweep.csv`.
+
+The later conversational result `driver 4.6±1.0°`, `passenger 1.9±0.5°`,
+`cross-caster +2.7±0.7°` used a two-to-one weight toward the one-turn pair and
+described its bars as practical rather than formal. No covariance calculation
+or coverage meaning for those bars was recovered. It is retained in the
+failure ledger, not promoted as the G5 result.
 
 For present/future cam descriptions, clockwise/counterclockwise means looking
 from the rear of the truck toward the front. Historical labels are not
