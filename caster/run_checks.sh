@@ -92,7 +92,12 @@ if command -v agda >/dev/null 2>&1; then
   mkdir -p "$work_dir/agda"
   (
     cd "$script_dir/agda"
-    agda --compile --compile-dir="$work_dir/agda" CasterReceipt.agda
+    # Agda 2.6.3's generated runtime still uses `*` as Type.  Newer GHC
+    # runners warn about that generated code, and Agda invokes GHC with
+    # -Werror.  This flag is scoped to the generated runtime compatibility
+    # warning; it does not relax checking of the Agda source.
+    agda --compile --ghc-flag=-Wno-star-is-type \
+      --compile-dir="$work_dir/agda" CasterReceipt.agda
   )
   "$work_dir/agda/CasterReceipt" >"$work_dir/agda.tsv"
   "$script_dir/check_receipt.sh" "$work_dir/agda.tsv" Agda
