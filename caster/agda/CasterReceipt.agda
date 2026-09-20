@@ -24,7 +24,7 @@ open import Agda.Builtin.IO using (IO)
 open import Agda.Builtin.Nat using (Nat; suc)
 open import Agda.Builtin.String
   using (String)
-  renaming (primStringAppend to _++_)
+  renaming (primStringAppend to infixr 5 _++_)
 open import Agda.Builtin.Unit using (⊤)
 
 postulate

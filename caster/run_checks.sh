@@ -104,9 +104,30 @@ fi
 
 idric_bin=${IDRIC_BIN:-}
 if [ -n "$idric_bin" ] && [ -x "$idric_bin" ]; then
-  "$idric_bin" --check "$script_dir/idric/CasterReceipt.idric"
-  "$idric_bin" -o "$work_dir/idric-caster-receipt" "$script_dir/idric/CasterReceipt.idric"
-  "$work_dir/idric-caster-receipt" >"$work_dir/idric.tsv"
+  idric_bootstrap_root=${IDRIC_BOOTSTRAP_ROOT:-}
+  if [ -n "$idric_bootstrap_root" ]; then
+    idric_library_path=
+    for idric_library in prelude base linear network contrib test; do
+      idric_library_path="${idric_library_path}${idric_bootstrap_root}/_/libs/${idric_library}/build/ttc:"
+    done
+    export IDRIS2_PATH="$idric_library_path"
+    export IDRIS2_DATA="$idric_bootstrap_root/_/support"
+    idric_runtime_library=$idric_bootstrap_root/_/support/c
+  else
+    idric_runtime_library=
+  fi
+  (
+    cd "$script_dir/idric"
+    "$idric_bin" --check CasterReceipt.idric
+    "$idric_bin" --output-dir "$work_dir" -o idric-caster-receipt \
+      CasterReceipt.idric
+  )
+  if [ -n "$idric_runtime_library" ]; then
+    LD_LIBRARY_PATH="${idric_runtime_library}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+      "$work_dir/idric-caster-receipt" >"$work_dir/idric.tsv"
+  else
+    "$work_dir/idric-caster-receipt" >"$work_dir/idric.tsv"
+  fi
   "$script_dir/check_receipt.sh" "$work_dir/idric.tsv" 'Idriç'
   grep -F 'designed_steering_positions_bootstrap	REJECTED' "$work_dir/idric.tsv" >/dev/null
   printf 'PASS\tIdriç compiled kernel\n'

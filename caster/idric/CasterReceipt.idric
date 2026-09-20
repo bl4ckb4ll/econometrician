@@ -17,28 +17,28 @@ CalculationScalar : Type
 CalculationScalar = Double
 
 record CasterPair where
-  constructor caster_pair
+  constructor CasterPairValue
   theta_right : CalculationScalar
   theta_left : CalculationScalar
   gamma_right : CalculationScalar
   gamma_left : CalculationScalar
 
 record CasterJacobian where
-  constructor caster_jacobian
+  constructor CasterJacobianValue
   theta_right_sensitivity : CalculationScalar
   theta_left_sensitivity : CalculationScalar
   gamma_right_sensitivity : CalculationScalar
   gamma_left_sensitivity : CalculationScalar
 
 record DiagonalCovariance where
-  constructor diagonal_covariance
+  constructor DiagonalCovarianceValue
   theta_right_variance : CalculationScalar
   theta_left_variance : CalculationScalar
   gamma_right_variance : CalculationScalar
   gamma_left_variance : CalculationScalar
 
 record PropagatedInterval where
-  constructor propagated_interval
+  constructor PropagatedIntervalValue
   lower_edge : CalculationScalar
   upper_edge : CalculationScalar
 
@@ -86,7 +86,7 @@ analytic_jacobian input =
       denominator = steering_denominator input
       direction = direction_of (numerator / denominator)
       denominator_squared = denominator * denominator
-  in caster_jacobian
+  in CasterJacobianValue
        (direction *
          ((-numerator * cosine_degrees input.theta_right) /
            denominator_squared) * pi / 180.0)
@@ -99,10 +99,10 @@ analytic_jacobian input =
 finite_difference_theta_right :
   CasterPair → CalculationScalar → CalculationScalar
 finite_difference_theta_right input step =
-  let plus = caster_pair
+  let plus = CasterPairValue
         (input.theta_right + step) input.theta_left
         input.gamma_right input.gamma_left
-      minus = caster_pair
+      minus = CasterPairValue
         (input.theta_right - step) input.theta_left
         input.gamma_right input.gamma_left
   in (caster_magnitude plus - caster_magnitude minus) / (2.0 * step)
@@ -125,17 +125,15 @@ propagate_symmetric_angle_box :
   (gamma_difference : CalculationScalar) →
   PropagatedInterval
 propagate_symmetric_angle_box theta radius gamma_difference =
-  propagated_interval
+  PropagatedIntervalValue
     (absolute (gamma_difference / (2.0 * sine_degrees (theta + radius))))
     (absolute (gamma_difference / (2.0 * sine_degrees (theta - radius))))
-
-not : Bool → Bool
-not True = False
-not False = True
 
 both : Bool → Bool → Bool
 both True right = right
 both False _ = False
+
+private infixr 2 `both`
 
 near :
   CalculationScalar → CalculationScalar → CalculationScalar → Bool
@@ -150,7 +148,7 @@ resampling_plan_is_valid structure unit groups True = False
 resampling_plan_is_valid structure unit groups False = True
 
 g2_pair : CasterPair
-g2_pair = caster_pair (180.0 / 17.4) (-(180.0 / 17.4)) 0.5 2.5
+g2_pair = CasterPairValue (180.0 / 17.4) (-(180.0 / 17.4)) 0.5 2.5
 
 g2_estimate : CalculationScalar
 g2_estimate = caster_magnitude g2_pair
@@ -178,13 +176,13 @@ common_camber_zero_loading =
   + g2_jacobian.gamma_left_sensitivity
 
 h006_pair : CasterPair
-h006_pair = caster_pair 22.5 (-22.5) 3.75 0.0
+h006_pair = CasterPairValue 22.5 (-22.5) 3.75 0.0
 
 h006_variance : CalculationScalar
 h006_variance =
   propagate_diagonal_covariance
     (analytic_jacobian h006_pair)
-    (diagonal_covariance 25.0 25.0 0.0625 0.0625)
+    (DiagonalCovarianceValue 25.0 25.0 0.0625 0.0625)
 
 correlated_three_pair_variance : CalculationScalar
 correlated_three_pair_variance = 1.0 + 0.25 / 3.0

@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            agda-bin build-essential curl ghc libgmp-dev r-base-core
+            agda-bin build-essential chezscheme curl ghc libgmp-dev r-base-core
 
       - name: Fetch pinned Ithon frontend
         env:
@@ -59,4 +59,5 @@ jobs:
           REQUIRE_ALL_LANGUAGES: '1'
           ITHON_BIN: ${{ runner.temp }}/ithon/ithon
           IDRIC_BIN: ${{ runner.temp }}/idric/build/exec/idris2
+          IDRIC_BOOTSTRAP_ROOT: ${{ runner.temp }}/idric
         run: ./caster/run_checks.sh
