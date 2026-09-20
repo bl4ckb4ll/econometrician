@@ -97,6 +97,8 @@ def pair_results(stage: dict, side: str, steering_model: dict) -> list[dict]:
                 values.append({
                     "gamma_right_deg": gr,
                     "gamma_left_deg": gl,
+                    "odd_camber_component_deg": (gr - gl) / 2.0,
+                    "even_camber_component_deg": (gr + gl) / 2.0,
                     "signed_odd_coefficient_deg": signed,
                     "magnitude_deg": abs(signed),
                     "jacobian_magnitude": jacobian,
