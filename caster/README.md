@@ -33,7 +33,10 @@ The executable contract is intentionally narrow:
    nonlinear box interval.  A bound is not a probability distribution.
 7. Audit a proposed resampling plan before any bootstrap.  Designed steering
    positions are not IID draws, and an effect already present in an explicit
-   covariance source cannot also enter through resampling.
+   covariance source cannot also enter through resampling.  For symmetric
+   steering data the plan must keep each `+delta/-delta` pair inside one
+   independent sweep/session unit; the odd and even camber components are both
+   retained and must be recomputed after group resampling.
 8. Emit a line-oriented receipt that states what was calculated and what was
    not established.
 
@@ -65,8 +68,14 @@ nonempty `independence_assertion`; adding the matrices asserts zero
 cross-covariance.  Reusing a covered effect in two sources is rejected.
 
 `bounds.tsv` records one nonnegative radius per named input.  `resampling.tsv`
-records the sampling structure, resampling unit, group identity, and covered
-effects.  All formats are ordinary tab-separated text, not JSON.
+records the sampling structure, resampling unit, group identity, symmetric
+`pair_id`, `pair_role` (`plus` or `minus`), and covered effects.  A valid
+odd/even bootstrap plan has at least two genuinely independent sweep/session
+groups, gives every group the same pair set, and contains exactly one plus and
+one minus member of every pair.  The current surviving single-sweep Dakota
+record therefore cannot produce a bootstrap error bar; the programs validate
+the future resampling structure but do not manufacture independent groups.
+All formats are ordinary tab-separated text, not JSON.
 
 ## Run
 
