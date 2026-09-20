@@ -31,6 +31,8 @@ postulate
   putStrLn : String → IO ⊤
   _>>_ : {A B : Set} → IO A → IO B → IO B
 
+infixr 1 _>>_
+
 {-# FOREIGN GHC import qualified Data.Text.IO as Text #-}
 {-# COMPILE GHC putStrLn = Text.putStrLn #-}
 {-# COMPILE GHC _>>_ = \ _ _ -> (>>) #-}
@@ -42,6 +44,8 @@ not false = true
 _and_ : Bool → Bool → Bool
 true and right = right
 false and _ = false
+
+infixr 2 _and_
 
 absolute : Float → Float
 absolute value with value < 0.0
