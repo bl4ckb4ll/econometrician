@@ -179,9 +179,9 @@ def resampling_plan_valid(
         return False
     if overlaps_explicit_error:
         return False
-    if not odd_even_pairs_complete:
+    if odd_even_pairs_complete == False:
         return False
-    if not pair_sets_match:
+    if pair_sets_match == False:
         return False
     return True
 
