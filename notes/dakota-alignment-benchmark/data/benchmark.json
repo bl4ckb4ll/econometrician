@@ -28,7 +28,7 @@
   "curvature": {"nearest_curve_general_formula":"validated as general math only","truck_specific_curvature":"not recovered","curvature_jacobian":"definition not recovered; implementation refuses to invent one"},
   "epsilon": {"epsilon_squared_zero":"intended for unresolved-tolerance object in current mission","mixed_products":"unresolved in recovered design record; code requires explicit square_free or first_order_ideal mode"},
   "inverse_uncertainty": {"meaning":"inverse image of uncertain observation set under model, with rank/branch/constraint checks","not_assumed":"1/sigma or Sigma^-1 by default"},
-  "tests": "36 regression/invariant tests passing at failure-audit build time; legacy script structure/text exact and floats within rtol=1e-9, atol=1e-10",
+  "tests": "36 regression/invariant tests passing at failure-audit build time; legacy script structure/text exact and floats within rtol=1e-7, atol=1e-9",
   "repository_lineage": "reports/downstream_map.md",
   "evidence_categories": ["observation","convention","derived_result","uncertainty_statement","interpretation_model"]
 }

@@ -80,7 +80,7 @@ Current receipt:
 
 - 36 benchmark tests pass;
 - the recovered legacy caster script preserves exact JSON structure/text and
-  reproduces floats within `rtol=1e-9`, `atol=1e-10` across runners.
+  reproduces floats within `rtol=1e-7`, `atol=1e-9` across runners.
 
 The second result demonstrates old-code reproducibility only. It does not resolve the passenger row-direction/value conflicts.
 

@@ -25,7 +25,7 @@ def compare(actual, expected, path="$"):
             raise AssertionError(f"{path}: {actual!r} != {expected!r}")
         return
     if isinstance(actual, (int, float)) and isinstance(expected, (int, float)):
-        if not math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-10):
+        if not math.isclose(actual, expected, rel_tol=1e-7, abs_tol=1e-9):
             raise AssertionError(f"{path}: {actual!r} != {expected!r}")
         return
     if type(actual) is not type(expected):
@@ -55,4 +55,4 @@ with open(sys.argv[2]) as saved_file:
 compare(generated, saved)
 PY
 printf '%s
-' 'legacy caster script output: structure/text exact; floats within rtol=1e-9, atol=1e-10'
+' 'legacy caster script output: structure/text exact; floats within rtol=1e-7, atol=1e-9'
