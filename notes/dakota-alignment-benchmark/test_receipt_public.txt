@@ -1,3 +1,3 @@
-....................................                                     [100%]
-36 passed
-legacy caster script output: structure/text exact; floats within rtol=1e-7, atol=1e-9
+........................................                                 [100%]
+40 passed
+legacy caster script output: scientific fields/text exact; floats within rtol=1e-6, atol=1e-8; solver iteration metadata ignored

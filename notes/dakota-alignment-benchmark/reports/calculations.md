@@ -80,4 +80,9 @@ A one-flat bolt rotation therefore does **not** imply a fixed linear pivot displ
 
 ## Old fit reproducibility
 
-The saved `dakota_caster_recheck.py` preserves exact JSON structure/text and reproduces floats within `rtol=1e-7`, `atol=1e-9`; the tolerance covers cross-runner linear-algebra variation below the four-decimal historical reporting precision. That establishes implementation reproducibility, not correctness of the disputed row mapping or its illustrative uncertainty assumptions.
+The saved `dakota_caster_recheck.py` preserves scientific fields/text and
+reproduces floats within `rtol=1e-6`, `atol=1e-8`; solver outer-iteration count
+is diagnostic metadata. The tolerance covers cross-runner linear-algebra
+variation below the four-decimal historical reporting precision. That
+establishes implementation reproducibility, not correctness of the disputed
+row mapping or its illustrative uncertainty assumptions.

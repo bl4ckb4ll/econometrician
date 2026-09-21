@@ -314,7 +314,9 @@ G2 anchor and the regression invariants. The programs:
 
 ## Unresolved
 
-- Direct road-wheel angles at every steering state.
+- The command-to-road-wheel-angle map at every steering state. Direct yaw would
+  narrow it but is not a required user measurement; the no-yaw procedure keeps
+  it as a named model/function uncertainty.
 - Independent repeatability data separated from new setup/session variation.
 - Gauge calibration/drift and contemporaneous body/reference attitude by
   steering state.

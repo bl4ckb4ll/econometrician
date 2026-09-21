@@ -2,6 +2,14 @@
 
 The benchmark keeps uncertainty kinds distinct. `src/dakota_benchmark/uncertainty.py` implements the first-order containers; it does not coerce them into one scalar error bar.
 
+The complete pre-fit registry is
+[`caster_error_source_census.tsv`](../data/caster_error_source_census.tsv).
+Every source selected for a calculation
+must finish with exactly one disposition: `propagated`,
+`cancelled_first_order`, `retained_symbolically`, `branched`, or
+`rejected_as_incompatible`. Cancellation never authorizes deletion of the
+source record.
+
 ## Numerical stochastic uncertainty
 
 Use a covariance only when a numerical stochastic interpretation is justified. The old script's `sigma_gamma=0.25°` and `sigma_alpha=15°` are **illustrative assumptions explicitly labeled as such in the source**, not empirical Dakota tolerances. They are retained as model-history evidence, not promoted into the benchmark's measured covariance.
@@ -60,6 +68,17 @@ Forward propagation returns separate components:
 - model-uncertainty notes.
 
 They are not collapsed into a single `±sigma` by the library.
+
+## Nested neighborhoods
+
+`(p)`, `((p))`, and `(((p)))` denote nested neighborhoods
+$N_1(p) \subseteq N_2(p) \subseteq N_3(p)$. They need not be symmetric, centered,
+probabilistic, or numerically commensurate. Exact forward images preserve the
+nesting. A local Jacobian maps a centered ball to an ellipsoid (or a
+lower-dimensional image), but that special case does not redefine every
+uncertainty source as a ball. See
+[`geometric_uncertainty_pushforward.md`](geometric_uncertainty_pushforward.md)
+for the sphere, rotation, finite set, and tangent-map model.
 
 ## Audited final-bar path
 

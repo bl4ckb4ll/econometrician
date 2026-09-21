@@ -29,6 +29,22 @@ This is a **measurement-model state**, not a recovered suspension configuration.
 
 The experiment currently lacks a verified table of actual road-wheel angles. Giving each row a steering-angle nuisance variable makes that missing information visible rather than burying it in a nominal ratio. This makes the inverse problem intentionally underdetermined, which is the correct diagnostic until the angle metrology is recovered.
 
-## Future observations needed to connect physical and measurement state
+Direct yaw is not a procedural prerequisite. When it cannot be measured, the
+steering angles remain latent outputs of a declared command map
+`G(command, side, path, state)`. The manual-derived 17.4:1 conversion is the
+nominal member of that map family; its per-wheel and nonlinear discrepancy is a
+named model/input uncertainty. Half/full/lock odd-signal consistency and the
+two sides constrain or reject candidate `G` maps without pretending to observe
+yaw. The result is model-conditional or set-valued caster, not an unsupported
+point identification.
 
-The observation vector should later add direct road-wheel yaw, repeated inclinometer readings, actual eccentric witness-mark coordinates/angles, controlled ride height, and post-intervention before/after pairs. Only then can a physical suspension map and its Jacobian replace the present candidate measurement map.
+## Future observations that would narrow physical and measurement state
+
+Repeated inclinometer readings, actual eccentric witness-mark
+coordinates/angles, controlled ride height, and post-intervention before/after
+pairs can narrow the present model. A one-time or external road-wheel-yaw
+calibration would also narrow the steering-map family if it ever becomes
+available, but the procedure does not require the user to make that
+measurement. Until enough of these constraints exist, the finite geometric map
+and its Jacobian remain a conditional family rather than one calibrated truck
+map.

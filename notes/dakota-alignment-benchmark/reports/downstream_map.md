@@ -7,6 +7,7 @@
 | Curvature | general nearest-curve formula; second derivative of recovered sweep basis | truck-specific curvature value; project-specific “curvature Jacobian” definition |
 | Inverse uncertainty | SVD/nullspace diagnostics; interval inverse feasibility; explicit failure modes | `1/sigma` as universal inverse error; pseudoinverse as identified state |
 | Error combination | explicit covariance, common-mode loadings, intervals, symbolic epsilons, model uncertainty | universal RSS; independent-reading assumption from count alone |
+| Geometric caster pushforward | `S^2` wheel normals, `SO(3)` steering rotations, Rodrigues odd/even structure, nested finite sets, source-conservation receipts, and a no-yaw steering-map family | a newly measured caster value; a calibrated Dakota steering map; automatic combination of unlike errors |
 | Algebraic geometry | lifted trig constraints for candidate model; tangent/rank analysis | global suspension variety/singular-locus claims |
 | Econometrics | measurement error, EIV, latent state, interventions, correlated errors, identification failure, sequential quality changes | regression that discards physical mechanism or treats seven designed positions as IID samples |
 | Mechanical guidance | convention spec; contradiction list; intervention chronology | adjustment amounts derived from disputed old caster fits or uncalibrated paper cam coefficients |

@@ -51,11 +51,11 @@ The first arrow is an input-calibration problem. Do not silently replace actual 
 
 with `G` potentially nonlinear. Shared steering geometry, Ackermann effects, rack/steering-arm geometry, compliance, body/setup attitude, and path-dependent settling are candidate explanations or nuisance terms; this diagnostic does not choose among them.
 
-The two sides also should not automatically be treated as independent replications of the steering-angle error. They share the steering command and much of the mechanism, so a common or correlated input-error component is plausible. Inverse-variance weighting is not justified until the road-wheel-angle calibration and covariance structure are actually established.
+The two sides also should not automatically be treated as independent replications of the steering-angle error. They share the steering command and much of the mechanism, so a common or correlated input-error component is plausible. Inverse-variance weighting is not justified without an established dependence structure for the steering-map error.
 
 What this diagnostic establishes is narrower: steering-angle calibration/model error is a structurally distinct source that should be represented separately in the Jacobian/error-in-variables analysis. It does not by itself establish actual road-wheel angles, a corrected caster value, or a probability distribution for the error.
 
-A direct road-wheel-angle calibration sweep would turn part of this source from an unresolved model/input error into measured input data. Until then, preserve a named steering-angle epsilon or bounded feasible set rather than inventing a narrow Gaussian error bar.
+A direct road-wheel-angle calibration sweep would turn part of this source from an unresolved model/input error into measured input data, but it is optional rather than a prerequisite. When yaw cannot be measured, preserve a named steering-map epsilon or bounded/function-valued feasible family and use multi-scale, bilateral consistency checks rather than inventing a narrow Gaussian error bar.
 
 ## Combination receipt and dependence
 
