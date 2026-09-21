@@ -9,9 +9,9 @@ import Data.Text
 -- nonlinear bounds, shared-error modes, and resampling-plan rejection.
 --
 -- The current Idriç bootstrap exposes transcendental primitives through the
--- inherited Double carrier.  CalculationScalar makes that compatibility
--- boundary explicit; it is not a claim that host Double defines the physical
--- measurement or a future general Idriç real-number surface.
+-- inherited Double carrier. CalculationScalar makes that compatibility
+-- boundary explicit. This kernel is a regression oracle only; the physical
+-- measurement path is the binary32 Haskell frontend.
 
 CalculationScalar : Type
 CalculationScalar = Double
@@ -245,6 +245,8 @@ main : IO ()
 main = do
   putStrLn "receipt_version\tcaster-uncertainty-v1"
   putStrLn "implementation\tIdriç"
+  putStrLn "calculation_role\tregression_oracle"
+  putStrLn "numeric_carrier\tbinary64_reference"
   putStrLn ("status\t" ++ status_text checks_pass)
   putStrLn "case_id\tg2-passenger-half-turn"
   putStrLn "theta_source_kind\tmanual_17.4_to_1_nominal_conversion"

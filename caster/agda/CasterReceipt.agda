@@ -4,6 +4,7 @@ module CasterReceipt where
 -- and Haskell TSV frontends.  Keeping file ingestion out of this kernel makes
 -- its boundary explicit: it independently evaluates the formula, Jacobian,
 -- covariance, nonlinear interval, shared modes, and resampling decisions.
+-- This kernel is a regression oracle, not the physical measurement carrier.
 
 open import Agda.Builtin.Bool using (Bool; true; false)
 open import Agda.Builtin.Float
@@ -252,6 +253,8 @@ main : IO ⊤
 main =
   putStrLn "receipt_version\tcaster-uncertainty-v1" >>
   putStrLn "implementation\tAgda" >>
+  putStrLn "calculation_role\tregression_oracle" >>
+  putStrLn "numeric_carrier\tbinary64_reference" >>
   putStrLn ("status\t" ++ statusText checksPass) >>
   putStrLn "case_id\tg2-passenger-half-turn" >>
   putStrLn "theta_source_kind\tmanual_17.4_to_1_nominal_conversion" >>

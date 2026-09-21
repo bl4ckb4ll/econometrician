@@ -40,6 +40,25 @@ The executable contract is intentionally narrow:
 8. Emit a line-oriented receipt that states what was calculated and what was
    not established.
 
+## Precision boundary
+
+The Haskell frontend is the sole measurement-facing executable. Its
+`MeasurementScalar` is GHC `Float` (IEEE-754 binary32), and the original TSV
+literals are retained in the receipt instead of being rewritten with invented
+decimal places. R, Ithon, Agda, Idriç, and the NumPy benchmark module remain
+independent regression/reference implementations; their binary64 carriers are
+not physical measurement carriers.
+
+The long G2 value `5.568798743106686` is only a regression oracle. The
+measurement receipt compares its internal binary32 result to that oracle at
+binary32 tolerance, while the physical-facing conditional nominal center is
+reported as `5.6` degrees from the surviving one-decimal camber readings.
+That is not a final error-barred measurement. If empirical covariance later
+supplies a probabilistic uncertainty, the Haskell receipt rounds both the
+reported center and uncertainty to the same decimal place. Without such an
+uncertainty scale, `final_report_status` stays
+`blocked_missing_empirical_uncertainty_scale`.
+
 The primary case is [`cases/g2-passenger-half-turn`](cases/g2-passenger-half-turn).
 Its road-wheel angles are the nominal values implied by the documented 17.4:1
 overall steering ratio.  They are not arbitrary and they are not direct

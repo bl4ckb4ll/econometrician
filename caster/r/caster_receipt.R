@@ -1,7 +1,9 @@
 #!/usr/bin/env Rscript
 
-# A dependency-free, file-driven caster calculation and uncertainty receipt.
-# It refuses to turn an undocumented scale into a statistical error bar.
+# A dependency-free, file-driven regression/reference receipt.
+# R's numeric carrier is binary64, so this executable is not the physical
+# measurement path. It remains an independent oracle for formula, covariance,
+# bounds, provenance, and resampling safeguards.
 
 input_labels <- c(
   "theta_right_deg", "theta_left_deg",
@@ -362,6 +364,8 @@ left <- observations[observations$endpoint == "left", ]
 odd_even <- odd_even_components(inputs[3], inputs[4])
 emit("receipt_version", "caster-uncertainty-v1")
 emit("implementation", "R")
+emit("calculation_role", "regression_oracle")
+emit("numeric_carrier", "binary64_reference")
 emit("case_id", policy[["case_id"]])
 emit("status", "PASS")
 emit("estimate_kind", policy[["estimate_kind"]])

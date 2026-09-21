@@ -5,6 +5,8 @@
 # second TSV parser.  The R and Haskell frontends own file ingestion; this file
 # recomputes the historical G2 anchor, Jacobian, nonlinear stress interval,
 # covariance example, shared-systematic modes, and resampling guards.
+# Its Python float carrier is binary64, so it is explicitly a regression
+# oracle rather than the physical measurement path.
 
 import math
 import sys
@@ -293,6 +295,8 @@ require(split_pair_plan_valid == False, "split_odd_even_pair_accepted")
 
 print("receipt_version\tcaster-uncertainty-v1")
 print("implementation\tIthon")
+print("calculation_role\tregression_oracle")
+print("numeric_carrier\tbinary64_reference")
 print("case_id\tg2-passenger-half-turn")
 print("status\tPASS")
 print("theta_source_kind\tmanual_17.4_to_1_nominal_conversion")

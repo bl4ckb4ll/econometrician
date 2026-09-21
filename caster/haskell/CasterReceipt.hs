@@ -17,9 +17,12 @@ import System.FilePath ((</>))
 import System.IO (hPutStrLn, stderr)
 import Text.Printf (printf)
 import Text.Read (readMaybe)
+import Numeric (showFFloat)
+import Data.Char (isDigit)
 
 type Row = Map.Map String String
-type Matrix = [[Double]]
+type MeasurementScalar = Float
+type Matrix = [[MeasurementScalar]]
 
 inputLabels :: [String]
 inputLabels =
@@ -27,7 +30,7 @@ inputLabels =
   , "gamma_right_deg", "gamma_left_deg"
   ]
 
-radPerDeg :: Double
+radPerDeg :: MeasurementScalar
 radPerDeg = pi / 180.0
 
 failContract :: String -> String -> IO a
@@ -64,32 +67,47 @@ field :: Row -> String -> String
 field row name = fromMaybe (error ("validated TSV lacks field " ++ name))
                            (Map.lookup name row)
 
-parseNumber :: String -> String -> IO Double
+parseNumber :: String -> String -> IO MeasurementScalar
 parseNumber label text =
   case readMaybe text of
     Just value | not (isNaN value) && not (isInfinite value) -> pure value
     _ -> failContract "invalid_number" label
 
-formatNumber :: Double -> String
-formatNumber value = printf "%.12f" value
+formatNumber :: MeasurementScalar -> String
+formatNumber value = printf "%.7g" value
+
+formatFixed :: Int -> MeasurementScalar -> String
+formatFixed places value = showFFloat (Just places) value ""
+
+literalDecimalPlaces :: String -> Int
+literalDecimalPlaces text =
+  case break (== '.') text of
+    (_, []) -> 0
+    (_, _ : rest) -> length (takeWhile isDigit rest)
+
+uncertaintyDecimalPlaces :: MeasurementScalar -> Int
+uncertaintyDecimalPlaces uncertainty
+  | uncertainty <= 0 = 0
+  | uncertainty >= 1 = 0
+  | otherwise = ceiling (- logBase 10 uncertainty)
 
 emit :: String -> String -> IO ()
 emit key value = putStrLn (key ++ "\t" ++ value)
 
-signedCoefficient :: [Double] -> Double
+signedCoefficient :: [MeasurementScalar] -> MeasurementScalar
 signedCoefficient [thetaRight, thetaLeft, gammaRight, gammaLeft] =
   let denominator = sin (thetaRight * radPerDeg) - sin (thetaLeft * radPerDeg)
   in (gammaRight - gammaLeft) / denominator
 signedCoefficient _ = error "four inputs required"
 
-casterMagnitude :: [Double] -> Double
+casterMagnitude :: [MeasurementScalar] -> MeasurementScalar
 casterMagnitude = abs . signedCoefficient
 
-oddEvenComponents :: Double -> Double -> (Double, Double)
+oddEvenComponents :: MeasurementScalar -> MeasurementScalar -> (MeasurementScalar, MeasurementScalar)
 oddEvenComponents gammaPlus gammaMinus =
   ((gammaPlus - gammaMinus) / 2.0, (gammaPlus + gammaMinus) / 2.0)
 
-analyticJacobian :: [Double] -> [Double]
+analyticJacobian :: [MeasurementScalar] -> [MeasurementScalar]
 analyticJacobian [thetaRight, thetaLeft, gammaRight, gammaLeft] =
   let tr = thetaRight * radPerDeg
       tl = thetaLeft * radPerDeg
@@ -104,13 +122,15 @@ analyticJacobian [thetaRight, thetaLeft, gammaRight, gammaLeft] =
      ]
 analyticJacobian _ = error "four inputs required"
 
-replaceAt :: Int -> Double -> [Double] -> [Double]
+replaceAt :: Int -> MeasurementScalar -> [MeasurementScalar] -> [MeasurementScalar]
 replaceAt index value values =
   take index values ++ [value] ++ drop (index + 1) values
 
-finiteDifferenceJacobian :: [Double] -> [Double]
+finiteDifferenceJacobian :: [MeasurementScalar] -> [MeasurementScalar]
 finiteDifferenceJacobian inputs =
-  let steps = [1e-5, 1e-5, 1e-6, 1e-6]
+  -- Binary32 needs a finite-difference step well above its rounding floor.
+  -- 0.05 degree is still finer than the surviving physical gauge readings.
+  let steps = [0.05, 0.05, 0.05, 0.05]
       one index step =
         let original = inputs !! index
             plus = replaceAt index (original + step) inputs
@@ -118,7 +138,7 @@ finiteDifferenceJacobian inputs =
         in (casterMagnitude plus - casterMagnitude minus) / (2 * step)
   in zipWith one [0 ..] steps
 
-validatePair :: [String] -> [Row] -> IO ([Double], Row, Row)
+validatePair :: [String] -> [Row] -> IO ([MeasurementScalar], Row, Row)
 validatePair header rows = do
   let expected =
         [ "observation_id", "endpoint", "generation", "adjustment_state", "side"
@@ -174,7 +194,7 @@ splitSemicolon value =
     (first, []) -> [first]
     (first, _ : rest) -> first : splitSemicolon rest
 
-determinant :: Matrix -> Double
+determinant :: Matrix -> MeasurementScalar
 determinant [] = 1.0
 determinant [[value]] = value
 determinant matrix =
@@ -196,7 +216,7 @@ isPositiveSemidefinite matrix =
   in all (>= (-1e-10))
        [determinant (principalSubmatrix matrix selected) | selected <- indices]
 
-quadraticForm :: [Double] -> Matrix -> Double
+quadraticForm :: [MeasurementScalar] -> Matrix -> MeasurementScalar
 quadraticForm vector matrix =
   sum [vector !! row * matrix !! row !! column * vector !! column
       | row <- [0 .. 3], column <- [0 .. 3]]
@@ -205,12 +225,12 @@ data CovarianceReceipt = CovarianceReceipt
   { covarianceStatus :: String
   , covarianceSourceIds :: [String]
   , covarianceEffects :: [String]
-  , covarianceContributions :: [(String, Double)]
-  , covarianceVariance :: Double
+  , covarianceContributions :: [(String, MeasurementScalar)]
+  , covarianceVariance :: MeasurementScalar
   }
 
 readCovarianceSources
-  :: FilePath -> Map.Map String String -> [Double] -> IO (Maybe CovarianceReceipt)
+  :: FilePath -> Map.Map String String -> [MeasurementScalar] -> IO (Maybe CovarianceReceipt)
 readCovarianceSources caseDir policy jacobian = do
   let sourcesPath = caseDir </> "sources.tsv"
       cellsPath = caseDir </> "covariance.tsv"
@@ -282,15 +302,15 @@ readCovarianceSources caseDir policy jacobian = do
 
 data BoundsReceipt = BoundsReceipt
   { boundsKind :: String
-  , linearLower :: Double
-  , linearUpper :: Double
-  , nonlinearLower :: Double
-  , nonlinearUpper :: Double
-  , nonlinearMinus :: Double
-  , nonlinearPlus :: Double
+  , linearLower :: MeasurementScalar
+  , linearUpper :: MeasurementScalar
+  , nonlinearLower :: MeasurementScalar
+  , nonlinearUpper :: MeasurementScalar
+  , nonlinearMinus :: MeasurementScalar
+  , nonlinearPlus :: MeasurementScalar
   }
 
-readBounds :: FilePath -> [Double] -> [Double] -> IO (Maybe BoundsReceipt)
+readBounds :: FilePath -> [MeasurementScalar] -> [MeasurementScalar] -> IO (Maybe BoundsReceipt)
 readBounds path center jacobian = do
   exists <- doesFileExist path
   if not exists
@@ -396,7 +416,15 @@ main = do
       numerical = finiteDifferenceJacobian inputs
       derivativeError = maximum (zipWith (\a b -> abs (a - b)) jacobian numerical)
       (oddComponent, evenComponent) = oddEvenComponents (inputs !! 2) (inputs !! 3)
-  require (derivativeError <= 1e-8) "finite_difference_jacobian_mismatch" ""
+      estimate = casterMagnitude inputs
+      inputLiterals =
+        [ field right "theta_deg", field left "theta_deg"
+        , field right "gamma_deg", field left "gamma_deg"
+        ]
+      nominalPlaces = min
+        (literalDecimalPlaces (field right "gamma_deg"))
+        (literalDecimalPlaces (field left "gamma_deg"))
+  require (derivativeError <= 1e-4) "finite_difference_jacobian_mismatch" ""
   covariance <- readCovarianceSources caseDir policy jacobian
   bounds <- readBounds (caseDir </> "bounds.tsv") inputs jacobian
   defaultResamplingExists <- doesFileExist (caseDir </> "resampling.tsv")
@@ -411,6 +439,9 @@ main = do
 
   emit "receipt_version" "caster-uncertainty-v1"
   emit "implementation" "Haskell"
+  emit "calculation_role" "measurement_path"
+  emit "numeric_carrier" "ieee754_binary32"
+  emit "precision_policy" "physical_calculation_binary32_or_coarser"
   emit "case_id" caseId
   emit "status" "PASS"
   emit "estimate_kind" estimateKind
@@ -424,9 +455,10 @@ main = do
   emit "theta_source_id" (field right "theta_source_id")
   emit "theta_source_kind" (field right "theta_source_kind")
   emit "input_order" (intercalate "," inputLabels)
-  emit "input_values" (intercalate "," (map formatNumber inputs))
+  emit "input_values" (intercalate "," inputLiterals)
   emit "signed_coefficient_deg" (formatNumber (signedCoefficient inputs))
-  emit "caster_magnitude_deg" (formatNumber (casterMagnitude inputs))
+  emit "internal_caster_magnitude_deg" (formatNumber estimate)
+  emit "caster_magnitude_deg" (formatFixed nominalPlaces estimate)
   emit "odd_camber_component_deg" (formatNumber oddComponent)
   emit "even_camber_component_deg" (formatNumber evenComponent)
   emit "jacobian_values" (intercalate "," (map formatNumber jacobian))
@@ -437,15 +469,24 @@ main = do
     Nothing -> do
       emit "covariance_status" "not_supplied"
       emit "error_bar_status" "not_computed"
+      emit "final_report_status" "blocked_missing_empirical_uncertainty_scale"
     Just receipt -> do
+      let standardError = sqrt (covarianceVariance receipt)
       emit "covariance_status" (covarianceStatus receipt)
       emit "covariance_source_ids" (intercalate ";" (covarianceSourceIds receipt))
       emit "propagated_variance_deg2" (formatNumber (covarianceVariance receipt))
-      emit "propagated_standard_deviation_deg"
-        (formatNumber (sqrt (covarianceVariance receipt)))
+      emit "propagated_standard_deviation_deg" (formatNumber standardError)
       forM_ (covarianceContributions receipt) $ \(sourceId, contribution) ->
         emit ("variance_contribution." ++ sourceId) (formatNumber contribution)
       emit "error_bar_status" (covarianceStatus receipt)
+      if covarianceStatus receipt == "probabilistic_standard_error"
+        then do
+          let places = uncertaintyDecimalPlaces standardError
+          emit "reported_center_deg" (formatFixed places estimate)
+          emit "reported_uncertainty_deg" (formatFixed places standardError)
+          emit "final_report_status" "center_rounded_to_uncertainty_scale"
+        else
+          emit "final_report_status" "blocked_missing_empirical_uncertainty_scale"
   case bounds of
     Nothing -> emit "bounds_status" "not_supplied"
     Just receipt -> do

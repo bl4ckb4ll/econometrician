@@ -1,3 +1,12 @@
+"""Reference uncertainty machinery for the Dakota caster audit.
+
+NumPy's default ``float`` is binary64. This module therefore validates
+Jacobian/covariance structure, nonlinear bounds, dependence, and odd/even
+resampling contracts; it is not the measurement-facing numeric carrier.
+The physical receipt path is ``caster/haskell/CasterReceipt.hs`` and uses
+IEEE-754 binary32.
+"""
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from itertools import product

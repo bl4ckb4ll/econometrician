@@ -81,8 +81,8 @@ fi
 if command -v runghc >/dev/null 2>&1; then
   runghc "$script_dir/haskell/CasterReceipt.hs" "$case_g2" >"$work_dir/haskell-g2.tsv"
   "$script_dir/check_receipt.sh" "$work_dir/haskell-g2.tsv" Haskell
-  grep -F 'odd_camber_component_deg	-1.000000000000' "$work_dir/haskell-g2.tsv" >/dev/null
-  grep -F 'even_camber_component_deg	1.500000000000' "$work_dir/haskell-g2.tsv" >/dev/null
+  grep -F 'odd_camber_component_deg	-1' "$work_dir/haskell-g2.tsv" >/dev/null
+  grep -F 'even_camber_component_deg	1.5' "$work_dir/haskell-g2.tsv" >/dev/null
   runghc "$script_dir/haskell/CasterReceipt.hs" "$case_g2" \
     --resampling "$regressions/odd-even-paired-sweeps.tsv" >"$work_dir/haskell-paired.tsv"
   grep -F 'resampling_pairing	symmetric_odd_even_pairs_preserved' "$work_dir/haskell-paired.tsv" >/dev/null
@@ -92,9 +92,9 @@ if command -v runghc >/dev/null 2>&1; then
       --resampling "$regressions/split-odd-even-pair.tsv"
   runghc "$script_dir/haskell/CasterReceipt.hs" "$case_h006" >"$work_dir/haskell-h006.tsv"
   grep -F 'error_bar_status	illustrative_only_not_error_bar' "$work_dir/haskell-h006.tsv" >/dev/null
-  grep -F 'propagated_standard_deviation_deg	0.863804278906' "$work_dir/haskell-h006.tsv" >/dev/null
+  grep -F 'propagated_standard_deviation_deg	0.863804' "$work_dir/haskell-h006.tsv" >/dev/null
   runghc "$script_dir/haskell/CasterReceipt.hs" "$case_shared_zero" >"$work_dir/haskell-shared-zero.tsv"
-  grep -F 'propagated_variance_deg2	0.000000000000' "$work_dir/haskell-shared-zero.tsv" >/dev/null
+  grep -F 'propagated_variance_deg2	0' "$work_dir/haskell-shared-zero.tsv" >/dev/null
   expect_rejection designed_positions_not_iid "$work_dir/haskell-designed.txt" \
     runghc "$script_dir/haskell/CasterReceipt.hs" "$case_g2" \
       --resampling "$regressions/designed-steering-positions.tsv"
