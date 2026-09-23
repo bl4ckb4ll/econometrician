@@ -34,26 +34,21 @@ The post-reset sweep was recorded at seven steering positions:
 | One turn right | -3.25° to -3.0° | +4.0° |
 | Maximum right | -2.5° | +4.0° |
 
-The reconstruction used a finite three-dimensional steering-axis model rather than identifying the odd camber coefficient directly with caster. With (s=+1) on the driver side and (s=-1) on the passenger side, it represented the steering axis as
+The reconstruction used a finite three-dimensional steering-axis model rather than identifying the odd camber coefficient directly with caster. With s=+1 on the driver side and s=-1 on the passenger side, it represented the steering axis as
 
-[
-a propto (-	an C,-s	an I,1)
-]
+    a proportional to (-tan(C), -s*tan(I), 1)
 
-and the outward wheel normal at road-wheel yaw (delta) and camber (gamma) as
+and the outward wheel normal at road-wheel yaw delta and camber gamma as
 
-[
-n=(-scosgammasindelta,;scosgammacosdelta,;-singamma).
-]
+    n = (-s*cos(gamma)*sin(delta),
+          s*cos(gamma)*cos(delta),
+         -sin(gamma))
 
-Rigid rotation preserves (acdot n), giving the finite observation equation
+Rigid rotation preserves the dot product a·n, giving the finite observation equation
 
-[
-singamma+
-[	an Icosdelta-s	an Csindelta]cosgamma
-=
-singamma_0+	an Icosgamma_0.
-]
+    sin(gamma)
+      + [tan(I)*cos(delta) - s*tan(C)*sin(delta)]*cos(gamma)
+      = sin(gamma0) + tan(I)*cos(gamma0)
 
 A shared parameter interpolated between equal left/right wheel angles and ideal Ackermann geometry. The least-squares center was approximately +2.95° driver and +1.46° passenger.
 
@@ -72,7 +67,7 @@ The model must distinguish:
 - path-dependent linkage/Ackermann/model discrepancy;
 - a deliberately exaggerated stress test.
 
-Those are not interchangeable. A stress test may be useful diagnostically, but it must not widen the physical credible/feasible set unless evidence supports that magnitude.
+Those are not interchangeable. A stress test may be useful diagnostically, but it must not widen the physical feasible set unless evidence supports that magnitude.
 
 The earlier PR #5 work correctly said that 17.4:1 is the authoritative nominal input and that no numerical tolerance should be invented. The 22 September reconstruction violated the spirit of that rule by introducing a ±10% profile family anyway.
 
@@ -88,7 +83,7 @@ This is a central Econometrician-in-a-Box requirement:
 
 > Evidence that resolves an uncertainty source must shrink or transform that source. The source cannot remain in the final uncertainty budget merely because it appeared in an earlier census.
 
-If a ruler observation leaves only, for example, reading resolution, placement error, or a known reference transformation, those specific residual sources should be propagated. A generic free body-roll parameter is no longer the right object.
+If a ruler observation leaves only reading resolution, placement error, or a known reference transformation, those specific residual sources should be propagated. A generic free body-roll parameter is no longer the right object.
 
 ## Failure 3: the estimator treated the current sweep too much like an isolated dataset
 
@@ -107,13 +102,11 @@ Available historical evidence includes:
 
 Those observations constrain state transitions. They are not IID repeats, and they should not be pooled as though they were all measurements of one unchanged alignment. But the opposite mistake is also wrong: they cannot simply be discarded when inferring the current state.
 
-The correct object is a state-space / intervention model:
+The correct object is a state-space/intervention model:
 
-[
-x_{k+1}=F(x_k,u_k,eta_k)
-]
+    x[k+1] = F(x[k], u[k], eta[k])
 
-where (x_k) contains physical alignment state, (u_k) is the recorded cam adjustment, and (eta_k) is bounded mechanical/model discrepancy. Photographs and witness marks constrain (u_k) and state identity. Previous sweeps constrain (x_k). The current sweep constrains (x_{k+1}).
+where x[k] contains physical alignment state, u[k] is the recorded cam adjustment, and eta[k] is bounded mechanical/model discrepancy. Photographs and witness marks constrain u[k] and state identity. Previous sweeps constrain x[k]. The current sweep constrains x[k+1].
 
 That history can rule out nominally algebraic solutions that would require an impossible change in caster for the recorded cam motion.
 
@@ -144,7 +137,7 @@ That observation is valuable. It is a sign/calibration experiment on the measure
 - whether an apparent left/right convention has been reversed;
 - whether a fitted model is explaining data with an impossible instrument orientation.
 
-Econometrician in a Box needs a first-class representation for this kind of qualitative-but-hard evidence. A sign observation is not "soft background knowledge"; it eliminates half of a parameter space when the geometry is otherwise symmetric.
+Econometrician in a Box needs a first-class representation for this kind of qualitative-but-hard evidence. A sign observation is not soft background knowledge; it can eliminate half of a parameter space when the geometry is otherwise symmetric.
 
 ## Failure 6: physical impossibility and model disagreement were conflated with uncertainty
 
@@ -180,7 +173,7 @@ A future caster reconstruction should ingest typed evidence such as:
 | direct reference measurement | ruler/body attitude | condition on observation; propagate its resolution |
 | sign calibration | perpendicular bubble direction | hard sign/orientation constraint |
 | intervention | rear cam one flat outward | state transition with bounded response |
-| image/witness mark | eccentric returned to mark | state identity / angular interval |
+| image/witness mark | eccentric returned to mark | state identity/angular interval |
 | prior configuration sweep | earlier seven-position sweep | prior-state observation, not IID current data |
 | mechanical monotonicity | rear cam direction raises/lowers caster | inequality constraint |
 | factory target | approximately +3.5° | reference/diagnostic, not automatically a hard prior |
