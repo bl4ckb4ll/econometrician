@@ -129,3 +129,10 @@ inverse conditioning, nuisance effects, input error, correlated observations,
 and geometric curvature. Cross-linked with ASE, Fulton, and Coxeter. No new
 runtime method, general-purpose bootstrap, or measured truck calibration is
 claimed.
+
+[Lambert-Mogiliansky: contextual and non-classical uncertainty](notes/lambert-mogiliansky-contextual-uncertainty.md)
+records Ariane Lambert-Mogiliansky's work on type-indeterminate preferences,
+non-classical uncertainty, dynamic consistency, and persuasion. The note keeps
+the empirical warning separate from the formalism: elicitation order and context
+can be part of the statistical object, but no quantum-like runtime method is
+claimed.
