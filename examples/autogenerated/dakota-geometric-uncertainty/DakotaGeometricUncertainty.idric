@@ -1,0 +1,242 @@
+module DakotaGeometricUncertainty
+
+import Data.List
+import Data.Text
+
+%default total
+
+data ErrorKind
+  = StochasticCovariance
+  | SharedSystematic
+  | BoundedSet
+  | SymbolicEpsilon
+  | DiscreteAlternative
+  | IncompatibleState
+  | ModelDiscrepancy
+  | ArithmeticRounding
+
+data Disposition
+  = Propagated
+  | CancelledFirstOrder
+  | RetainedSymbolically
+  | Branched
+  | RejectedAsIncompatible
+
+record ErrorSource where
+  constructor ErrorSourceValue
+  source_id : Text
+  error_kind : ErrorKind
+
+record SourceReceipt where
+  constructor SourceReceiptValue
+  receipt_source_id : Text
+  disposition : Disposition
+
+data ReadingDecision
+  = AcceptReading Text
+  | RetainAlternatives (List Text)
+  | RejectIncompatibleReading Text
+
+data IntakeRoute = AcceptedRoute | BranchedRoute | RejectedRoute
+
+route_reading : ReadingDecision → IntakeRoute
+route_reading (AcceptReading _) = AcceptedRoute
+route_reading (RetainAlternatives _) = BranchedRoute
+route_reading (RejectIncompatibleReading _) = RejectedRoute
+
+intake_route_equal : IntakeRoute → IntakeRoute → Bool
+intake_route_equal AcceptedRoute AcceptedRoute = True
+intake_route_equal BranchedRoute BranchedRoute = True
+intake_route_equal RejectedRoute RejectedRoute = True
+intake_route_equal _ _ = False
+
+count_source_id : Text → List ErrorSource → Number
+count_source_id wanted [] = 0
+count_source_id wanted (source :: rest) =
+  if wanted ≟ source.source_id
+     then S (count_source_id wanted rest)
+     else count_source_id wanted rest
+
+count_receipt_id : Text → List SourceReceipt → Number
+count_receipt_id wanted [] = 0
+count_receipt_id wanted (receipt :: rest) =
+  if wanted ≟ receipt.receipt_source_id
+     then S (count_receipt_id wanted rest)
+     else count_receipt_id wanted rest
+
+unique_source_ids : List ErrorSource → Bool
+unique_source_ids [] = True
+unique_source_ids (source :: rest) =
+  count_source_id source.source_id rest ≟ 0 && unique_source_ids rest
+
+unique_receipt_ids : List SourceReceipt → Bool
+unique_receipt_ids [] = True
+unique_receipt_ids (receipt :: rest) =
+  count_receipt_id receipt.receipt_source_id rest ≟ 0 &&
+  unique_receipt_ids rest
+
+every_source_has_receipt : List ErrorSource → List SourceReceipt → Bool
+every_source_has_receipt [] receipts = True
+every_source_has_receipt (source :: rest) receipts =
+  count_receipt_id source.source_id receipts ≟ 1 &&
+  every_source_has_receipt rest receipts
+
+every_receipt_has_source : List SourceReceipt → List ErrorSource → Bool
+every_receipt_has_source [] sources = True
+every_receipt_has_source (receipt :: rest) sources =
+  count_source_id receipt.receipt_source_id sources ≟ 1 &&
+  every_receipt_has_source rest sources
+
+account_for_every_source : List ErrorSource → List SourceReceipt → Bool
+account_for_every_source sources receipts =
+  unique_source_ids sources &&
+  unique_receipt_ids receipts &&
+  every_source_has_receipt sources receipts &&
+  every_receipt_has_source receipts sources
+
+data UncertaintyLevel = OneLevel | TwoLevels | ThreeLevels
+
+level_contained_in : UncertaintyLevel → UncertaintyLevel → Bool
+level_contained_in OneLevel _ = True
+level_contained_in TwoLevels OneLevel = False
+level_contained_in TwoLevels _ = True
+level_contained_in ThreeLevels ThreeLevels = True
+level_contained_in ThreeLevels _ = False
+
+record Vector3 where
+  constructor V3
+  x : Integer
+  y : Integer
+  z : Integer
+
+dot : Vector3 → Vector3 → Integer
+dot left right =
+  left.x * right.x + left.y * right.y + left.z * right.z
+
+cross : Vector3 → Vector3 → Vector3
+cross left right =
+  V3
+    (left.y * right.z - left.z * right.y)
+    (left.z * right.x - left.x * right.z)
+    (left.x * right.y - left.y * right.x)
+
+vector_equal : Vector3 → Vector3 → Bool
+vector_equal left right =
+  left.x ≟ right.x && left.y ≟ right.y && left.z ≟ right.z
+
+infinitesimal_rotation : Vector3 → Vector3 → Vector3
+infinitesimal_rotation angular_perturbation normal =
+  cross angular_perturbation normal
+
+is_tangent_at : Vector3 → Vector3 → Bool
+is_tangent_at normal displacement = dot normal displacement ≟ 0
+
+rotation_about_normal_is_kernel : Vector3 → Bool
+rotation_about_normal_is_kernel normal =
+  vector_equal (infinitesimal_rotation normal normal) (V3 0 0 0)
+
+record SteeringResponse where
+  constructor SteeringResponseValue
+  odd_component : Integer
+  even_component : Integer
+
+reverse_steering : SteeringResponse → SteeringResponse
+reverse_steering response =
+  SteeringResponseValue (-response.odd_component) response.even_component
+
+response_equal : SteeringResponse → SteeringResponse → Bool
+response_equal left right =
+  left.odd_component ≟ right.odd_component &&
+  left.even_component ≟ right.even_component
+
+demo_sources : List ErrorSource
+demo_sources =
+  [ ErrorSourceValue "gauge_resolution" BoundedSet
+  , ErrorSourceValue "common_camber_zero" SharedSystematic
+  , ErrorSourceValue "transcription_alternative" DiscreteAlternative
+  , ErrorSourceValue "steering_input_map" ModelDiscrepancy
+  , ErrorSourceValue "untyped_tolerance" SymbolicEpsilon
+  , ErrorSourceValue "arithmetic_rounding" ArithmeticRounding
+  ]
+
+demo_receipts : List SourceReceipt
+demo_receipts =
+  [ SourceReceiptValue "gauge_resolution" Propagated
+  , SourceReceiptValue "common_camber_zero" CancelledFirstOrder
+  , SourceReceiptValue "transcription_alternative" Branched
+  , SourceReceiptValue "steering_input_map" RetainedSymbolically
+  , SourceReceiptValue "untyped_tolerance" RetainedSymbolically
+  , SourceReceiptValue "arithmetic_rounding" Propagated
+  ]
+
+dropped_receipt_regression : List SourceReceipt
+dropped_receipt_regression =
+  [ SourceReceiptValue "gauge_resolution" Propagated
+  , SourceReceiptValue "common_camber_zero" CancelledFirstOrder
+  , SourceReceiptValue "transcription_alternative" Branched
+  , SourceReceiptValue "steering_input_map" RetainedSymbolically
+  , SourceReceiptValue "arithmetic_rounding" Propagated
+  ]
+
+source_census_passes : Bool
+source_census_passes =
+  account_for_every_source demo_sources demo_receipts &&
+  not (account_for_every_source demo_sources dropped_receipt_regression)
+
+nested_levels_pass : Bool
+nested_levels_pass =
+  level_contained_in OneLevel TwoLevels &&
+  level_contained_in TwoLevels ThreeLevels &&
+  level_contained_in OneLevel ThreeLevels &&
+  not (level_contained_in ThreeLevels TwoLevels)
+
+sphere_tangent_pass : Bool
+sphere_tangent_pass =
+  let normal = V3 0 0 1
+      angular_perturbation = V3 2 (-3) 5
+  in is_tangent_at normal
+       (infinitesimal_rotation angular_perturbation normal)
+
+axial_kernel_pass : Bool
+axial_kernel_pass = rotation_about_normal_is_kernel (V3 2 (-3) 5)
+
+odd_even_reversal_pass : Bool
+odd_even_reversal_pass =
+  response_equal
+    (reverse_steering (SteeringResponseValue 7 11))
+    (SteeringResponseValue (-7) 11)
+
+robust_intake_interface_pass : Bool
+robust_intake_interface_pass =
+  intake_route_equal (route_reading (AcceptReading "-3.75")) AcceptedRoute &&
+  intake_route_equal
+    (route_reading (RetainAlternatives ["-3.75", "-4.00"])) BranchedRoute &&
+  intake_route_equal
+    (route_reading (RejectIncompatibleReading "wrong adjustment state"))
+    RejectedRoute
+
+all_checks_pass : Bool
+all_checks_pass =
+  source_census_passes &&
+  nested_levels_pass &&
+  sphere_tangent_pass &&
+  axial_kernel_pass &&
+  odd_even_reversal_pass &&
+  robust_intake_interface_pass
+
+status_text : Bool → Text
+status_text True = "PASS"
+status_text False = "FAIL"
+
+main : IO ()
+main = do
+  putStrLn "receipt_version\tdakota-geometric-uncertainty-v1"
+  putStrLn "implementation\tIdriç"
+  putStrLn ("status\t" ++ status_text all_checks_pass)
+  putStrLn ("source_census\t" ++ status_text source_census_passes)
+  putStrLn ("nested_uncertainty_levels\t" ++ status_text nested_levels_pass)
+  putStrLn ("sphere_tangent_map\t" ++ status_text sphere_tangent_pass)
+  putStrLn ("axial_rotation_kernel\t" ++ status_text axial_kernel_pass)
+  putStrLn ("odd_even_steering_reversal\t" ++ status_text odd_even_reversal_pass)
+  putStrLn ("robust_intake_interface\t" ++ status_text robust_intake_interface_pass)
+  putStrLn "physical_numeric_carrier\tSTRUCTURAL_ONLY_NO_DOUBLE"

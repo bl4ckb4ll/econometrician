@@ -1,0 +1,8 @@
+Scalar-slice and stage-reconstruction suite: 37 tests passed.
+
+Receipt scope:
+- exact G2 half/full/lock arithmetic and Jacobian;
+- G4 stage separation and range preservation;
+- all fourteen G5 reset-sweep rows and recomputed pair/combined values;
+- deterministic CLI output;
+- explicit refusal to manufacture a confidence interval from historical bounds.

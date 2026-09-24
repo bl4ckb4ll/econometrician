@@ -1,0 +1,3 @@
+observation_id	endpoint	generation	adjustment_state	side	sweep_id	approach_direction	theta_deg	gamma_deg	theta_source_id	theta_source_kind
+E-026	right	G2	pre_I1	passenger	sep10-passenger	right_to_left	10.344827586206897	0.5	E-073-manual-17.4-to-1	manual_17.4_to_1_nominal_conversion
+E-066	left	G4	post_I1_pre_I2	passenger	sep12-passenger	left_to_right	-10.344827586206897	2.5	E-073-manual-17.4-to-1	manual_17.4_to_1_nominal_conversion

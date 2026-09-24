@@ -1,0 +1,63 @@
+name: Caster multilanguage receipts
+
+on:
+  push:
+    branches:
+      - dakota-trustworthy-scalar-slice
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  receipts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out exact event head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Record exact head
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          echo "expected=$EXPECTED_HEAD"
+          echo "actual=$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+
+      - name: Install R, Haskell, Agda, and build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            agda-bin build-essential chezscheme curl ghc libgmp-dev r-base-core
+
+      - name: Fetch pinned Ithon frontend
+        env:
+          ITHON_REVISION: d8cd3d2d1f4101c08bdb3ba2c7a481c708a90504
+        run: |
+          git init "$RUNNER_TEMP/ithon"
+          git -C "$RUNNER_TEMP/ithon" remote add origin https://github.com/dilapidated-shed/ithon.git
+          git -C "$RUNNER_TEMP/ithon" fetch --depth 1 origin "$ITHON_REVISION"
+          git -C "$RUNNER_TEMP/ithon" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/ithon" rev-parse HEAD)" = "$ITHON_REVISION"
+
+      - name: Fetch and bootstrap pinned Idriç compiler
+        env:
+          IDRIC_REVISION: a8c24b10c143e97f8b24fc90a929eeee1e8f0392
+        run: |
+          git init "$RUNNER_TEMP/idric"
+          git -C "$RUNNER_TEMP/idric" remote add origin https://github.com/isomorphisms/Idric.git
+          git -C "$RUNNER_TEMP/idric" fetch --depth 1 origin "$IDRIC_REVISION"
+          git -C "$RUNNER_TEMP/idric" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/idric" rev-parse HEAD)" = "$IDRIC_REVISION"
+          "$RUNNER_TEMP/idric/edric" bootstrap
+
+      - name: Run all named language frontends
+        env:
+          REQUIRE_ALL_LANGUAGES: '1'
+          ITHON_BIN: ${{ runner.temp }}/ithon/ithon
+          IDRIC_BIN: ${{ runner.temp }}/idric/build/exec/idris2
+          IDRIC_BOOTSTRAP_ROOT: ${{ runner.temp }}/idric
+        run: ./caster/run_checks.sh

@@ -1,0 +1,137 @@
+{
+  "calculation": {
+    "caster_magnitude_deg": 5.568798743106686,
+    "exact_symmetric_multiplier_if_applicable": 2.784399371553343,
+    "formula_reported": "|C|",
+    "formula_signed": "C = (gamma_R - gamma_L) / (sin(theta_R) - sin(theta_L))",
+    "input_vector": {
+      "gamma_left_deg": 2.5,
+      "gamma_right_deg": 0.5,
+      "theta_left_deg": -10.344827586206897,
+      "theta_right_deg": 10.344827586206897
+    },
+    "signed_odd_coefficient_deg": -5.568798743106686
+  },
+  "derivative_check": {
+    "absolute_error": [6.5139005300807185e-12, 6.5139005300807185e-12, 4.045035417732379e-10, 4.045035417732379e-10],
+    "analytic": [-0.26622748317647016, 0.26622748317647016, -2.784399371553343, 2.784399371553343],
+    "finite_difference": [-0.26622748316995626, 0.26622748316995626, -2.7843993719578464, 2.7843993719578464],
+    "pass": true,
+    "tolerance": 1e-08
+  },
+  "finish_condition": {
+    "checked_jacobian_row": true,
+    "documented_caster_result": true,
+    "finite_difference_agreement": true,
+    "historical_discrepancy_report": true,
+    "large_jacobian_not_constructed": true,
+    "named_first_order_uncertainty_contributions": true,
+    "physical_accuracy_claimed": false,
+    "raw_inputs_deterministic": true,
+    "symbolic_epsilon_retained": true
+  },
+  "historical_comparison": {
+    "all_data_fit_is_not_same_calculation": true,
+    "direction_discrepancy_effect": "The symmetric caster magnitude is invariant to swapping the two endpoints, but the signed odd coefficient reverses sign. Therefore magnitude can be compared historically; signed physical caster cannot be inherited from the historical row labels.",
+    "direction_label_discrepancy": "ASE issue #4 labels the passenger half-turn values in the opposite left/right direction from the timestamped E-026/E-028 sequence: issue #4 has about +0.5 deg at half-left and +2.25 to +2.75 deg at half-right; timestamped evidence has +0.5 deg at half-right and +2.5 deg at half-left.",
+    "direction_label_result": "discrepancy",
+    "exact_minus_printed_multiplier_result_deg": 0.0007987431066860395,
+    "historical_all_data_robust_fit_deg": "5.4-5.5",
+    "magnitude_result": "agreement",
+    "printed_reference_multiplier": 2.784,
+    "recomputed_inside_reported_range": true,
+    "reported_symmetric_pair_range_deg": [5.0, 6.0],
+    "result_using_printed_multiplier_deg": 5.568,
+    "signed_historical_comparison_status": "not accepted: historical left/right labels conflict with timestamped evidence"
+  },
+  "jacobian_row": {
+    "columns": ["theta_right_deg", "theta_left_deg", "gamma_right_deg", "gamma_left_deg"],
+    "gamma_derivative_unit": "deg caster per deg camber",
+    "quantity": "caster_magnitude_deg",
+    "theta_derivative_unit": "deg caster per deg road-wheel angle",
+    "values": [-0.26622748317647016, 0.26622748317647016, -2.784399371553343, 2.784399371553343]
+  },
+  "linearization": {
+    "automatic_independence_assumption": false,
+    "base_caster_magnitude_deg": 5.568798743106686,
+    "epsilon_rule": "each named epsilon is retained symbolically with epsilon^2 = 0 for first-order bookkeeping; no rule for mixed epsilon_i*epsilon_j is assumed",
+    "note": "No RSS/sigma collapse; correlated perturbations remain separate.",
+    "terms": [
+      {"coefficient": -0.26622748317647016, "source": "delta_theta_right_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": 0.26622748317647016, "source": "delta_theta_left_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": -2.784399371553343, "source": "delta_gamma_right_deg", "unit": "deg caster per deg camber"},
+      {"coefficient": 2.784399371553343, "source": "delta_gamma_left_deg", "unit": "deg caster per deg camber"}
+    ],
+    "unresolved_symbolic_epsilons": ["epsilon_setup_hysteresis", "epsilon_gauge_calibration", "epsilon_cam_state_model"]
+  },
+  "provenance": {
+    "generation": "G2",
+    "metadata": {
+      "camber_sign": "positive means top of tire outward",
+      "caster_sign": "positive means top of steering axis rearward",
+      "current_cam_rotation_viewpoint": "looking from rear of truck toward front",
+      "current_viewpoint_is_retroactive_historical_claim": false,
+      "eccentric_cam_position_for_selected_pair": "not recovered; preserve as unresolved rather than infer from nearby notes",
+      "historical_cam_rotation_viewpoint_for_selected_pair": "not recovered; no CW/CCW conversion is used in this calculation",
+      "steering_sign": "right positive; left negative"
+    },
+    "raw_observations": [
+      {
+        "category": "observation",
+        "datetime_utc": "2026-09-10T16:50:13Z",
+        "evidence_id": "E-026",
+        "provenance": "user verbal reading at measurement time; timestamped recovered prior-conversation evidence",
+        "quantity": "camber_reading",
+        "raw_sign": "positive",
+        "raw_value_deg": 0.5,
+        "sequence": 102,
+        "source_artifact": "conversation context recovered into evidence_ledger.csv",
+        "source_uncertainty": "Instrument/calibration/actual road-wheel angle not numerically established.",
+        "steering_position": "0.5 turn right",
+        "steering_wheel_turns": 0.5
+      },
+      {
+        "category": "observation",
+        "datetime_utc": "2026-09-10T16:59:33Z",
+        "evidence_id": "E-028",
+        "provenance": "user verbal reading at measurement time; timestamped recovered prior-conversation evidence",
+        "quantity": "camber_reading",
+        "raw_sign": "positive",
+        "raw_value_deg": 2.5,
+        "sequence": 104,
+        "source_artifact": "conversation context recovered into evidence_ledger.csv",
+        "source_uncertainty": "Instrument/calibration/actual road-wheel angle not numerically established.",
+        "steering_position": "0.5 turn left",
+        "steering_wheel_turns": -0.5
+      }
+    ],
+    "side": "passenger",
+    "steering_angle_input": {
+      "actual_road_wheel_angles_status": "not measured numerically in recovered Sep10 record",
+      "formula": "theta_deg = 360 * steering_wheel_turns / 17.4",
+      "kind": "nominal model input, not direct observation",
+      "left_nominal_deg": -10.344827586206897,
+      "left_used_deg": -10.344827586206897,
+      "overall_ratio": 17.4,
+      "right_nominal_deg": 10.344827586206897,
+      "right_used_deg": 10.344827586206897,
+      "source": "2005_dakota_caster_sweep_reference.pdf / E-073"
+    }
+  },
+  "slice_id": "sep10-passenger-half-turn",
+  "status": "checked_scalar_slice",
+  "uncertainty_boundary": {
+    "legacy_illustrative_sigmas_excluded": {
+      "legacy_sigma_gamma_deg": 0.25,
+      "legacy_sigma_steering_wheel_deg": 15.0,
+      "reason": "the legacy script explicitly labels these illustrative assumptions, not measured tolerances"
+    },
+    "numerically_propagated_first_order_sources": [
+      {"coefficient": -0.26622748317647016, "source": "delta_theta_right_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": 0.26622748317647016, "source": "delta_theta_left_deg", "unit": "deg caster per deg road-wheel angle"},
+      {"coefficient": -2.784399371553343, "source": "delta_gamma_right_deg", "unit": "deg caster per deg camber"},
+      {"coefficient": 2.784399371553343, "source": "delta_gamma_left_deg", "unit": "deg caster per deg camber"}
+    ],
+    "unresolved": ["epsilon_setup_hysteresis", "epsilon_gauge_calibration", "epsilon_cam_state_model"]
+  }
+}

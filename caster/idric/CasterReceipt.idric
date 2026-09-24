@@ -1,0 +1,290 @@
+module CasterReceipt
+
+import Data.Text
+
+-- Independently evaluate the historical caster acceptance fixture.
+--
+-- The R and Haskell programs own TSV ingestion.  This typed Idriç kernel owns
+-- the calculation boundary: pair geometry, named Jacobian fields, covariance,
+-- nonlinear bounds, shared-error modes, and resampling-plan rejection.
+--
+-- The current Idriç bootstrap exposes transcendental primitives through the
+-- inherited Double carrier. CalculationScalar makes that compatibility
+-- boundary explicit. This kernel is a regression oracle only; the physical
+-- measurement path is the binary32 Haskell frontend.
+
+CalculationScalar : Type
+CalculationScalar = Double
+
+record CasterPair where
+  constructor CasterPairValue
+  theta_right : CalculationScalar
+  theta_left : CalculationScalar
+  gamma_right : CalculationScalar
+  gamma_left : CalculationScalar
+
+record CasterJacobian where
+  constructor CasterJacobianValue
+  theta_right_sensitivity : CalculationScalar
+  theta_left_sensitivity : CalculationScalar
+  gamma_right_sensitivity : CalculationScalar
+  gamma_left_sensitivity : CalculationScalar
+
+record DiagonalCovariance where
+  constructor DiagonalCovarianceValue
+  theta_right_variance : CalculationScalar
+  theta_left_variance : CalculationScalar
+  gamma_right_variance : CalculationScalar
+  gamma_left_variance : CalculationScalar
+
+record PropagatedInterval where
+  constructor PropagatedIntervalValue
+  lower_edge : CalculationScalar
+  upper_edge : CalculationScalar
+
+choice sampling_structure one_of
+  designed
+  clustered
+
+choice resampling_unit one_of
+  steering_position
+  sweep
+  measurement_session
+
+degrees_to_radians : CalculationScalar → CalculationScalar
+degrees_to_radians degrees = degrees * pi / 180.0
+
+sine_degrees : CalculationScalar → CalculationScalar
+sine_degrees angle = sin (degrees_to_radians angle)
+
+cosine_degrees : CalculationScalar → CalculationScalar
+cosine_degrees angle = cos (degrees_to_radians angle)
+
+absolute : CalculationScalar → CalculationScalar
+absolute value = if value < 0.0 then -value else value
+
+direction_of : CalculationScalar → CalculationScalar
+direction_of value = if value < 0.0 then -1.0 else 1.0
+
+steering_denominator : CasterPair → CalculationScalar
+steering_denominator input =
+  sine_degrees input.theta_right - sine_degrees input.theta_left
+
+camber_numerator : CasterPair → CalculationScalar
+camber_numerator input = input.gamma_right - input.gamma_left
+
+signed_coefficient : CasterPair → CalculationScalar
+signed_coefficient input =
+  camber_numerator input / steering_denominator input
+
+caster_magnitude : CasterPair → CalculationScalar
+caster_magnitude input = absolute (signed_coefficient input)
+
+analytic_jacobian : CasterPair → CasterJacobian
+analytic_jacobian input =
+  let numerator = camber_numerator input
+      denominator = steering_denominator input
+      direction = direction_of (numerator / denominator)
+      denominator_squared = denominator * denominator
+  in CasterJacobianValue
+       (direction *
+         ((-numerator * cosine_degrees input.theta_right) /
+           denominator_squared) * pi / 180.0)
+       (direction *
+         ((numerator * cosine_degrees input.theta_left) /
+           denominator_squared) * pi / 180.0)
+       (direction / denominator)
+       (-direction / denominator)
+
+finite_difference_theta_right :
+  CasterPair → CalculationScalar → CalculationScalar
+finite_difference_theta_right input step =
+  let plus = CasterPairValue
+        (input.theta_right + step) input.theta_left
+        input.gamma_right input.gamma_left
+      minus = CasterPairValue
+        (input.theta_right - step) input.theta_left
+        input.gamma_right input.gamma_left
+  in (caster_magnitude plus - caster_magnitude minus) / (2.0 * step)
+
+propagate_diagonal_covariance :
+  CasterJacobian → DiagonalCovariance → CalculationScalar
+propagate_diagonal_covariance derivative covariance =
+    derivative.theta_right_sensitivity *
+      derivative.theta_right_sensitivity * covariance.theta_right_variance
+  + derivative.theta_left_sensitivity *
+      derivative.theta_left_sensitivity * covariance.theta_left_variance
+  + derivative.gamma_right_sensitivity *
+      derivative.gamma_right_sensitivity * covariance.gamma_right_variance
+  + derivative.gamma_left_sensitivity *
+      derivative.gamma_left_sensitivity * covariance.gamma_left_variance
+
+propagate_symmetric_angle_box :
+  (theta : CalculationScalar) →
+  (radius : CalculationScalar) →
+  (gamma_difference : CalculationScalar) →
+  PropagatedInterval
+propagate_symmetric_angle_box theta radius gamma_difference =
+  PropagatedIntervalValue
+    (absolute (gamma_difference / (2.0 * sine_degrees (theta + radius))))
+    (absolute (gamma_difference / (2.0 * sine_degrees (theta - radius))))
+
+both : Bool → Bool → Bool
+both True right = right
+both False _ = False
+
+private infixr 2 `both`
+
+near :
+  CalculationScalar → CalculationScalar → CalculationScalar → Bool
+near actual expected tolerance = absolute (actual - expected) < tolerance
+
+odd_component : CalculationScalar → CalculationScalar → CalculationScalar
+odd_component gamma_plus gamma_minus = (gamma_plus - gamma_minus) / 2.0
+
+even_component : CalculationScalar → CalculationScalar → CalculationScalar
+even_component gamma_plus gamma_minus = (gamma_plus + gamma_minus) / 2.0
+
+resampling_plan_is_valid :
+  sampling_structure → resampling_unit → Number → Bool → Bool → Bool → Bool
+resampling_plan_is_valid designed steering_position groups overlap complete same_pairs = False
+resampling_plan_is_valid structure unit 0 overlap complete same_pairs = False
+resampling_plan_is_valid structure unit 1 overlap complete same_pairs = False
+resampling_plan_is_valid structure unit groups True complete same_pairs = False
+resampling_plan_is_valid structure unit groups overlap False same_pairs = False
+resampling_plan_is_valid structure unit groups overlap complete False = False
+resampling_plan_is_valid structure unit groups False True True = True
+
+g2_pair : CasterPair
+g2_pair = CasterPairValue (180.0 / 17.4) (-(180.0 / 17.4)) 0.5 2.5
+
+g2_estimate : CalculationScalar
+g2_estimate = caster_magnitude g2_pair
+
+g2_odd_component : CalculationScalar
+g2_odd_component = odd_component 0.5 2.5
+
+g2_even_component : CalculationScalar
+g2_even_component = even_component 0.5 2.5
+
+g2_jacobian : CasterJacobian
+g2_jacobian = analytic_jacobian g2_pair
+
+g2_stress_interval : PropagatedInterval
+g2_stress_interval =
+  propagate_symmetric_angle_box (180.0 / 17.4) 5.0 (0.5 - 2.5)
+
+g2_linear_radius : CalculationScalar
+g2_linear_radius =
+    absolute g2_jacobian.theta_right_sensitivity * 5.0
+  + absolute g2_jacobian.theta_left_sensitivity * 5.0
+
+common_steering_zero_loading : CalculationScalar
+common_steering_zero_loading =
+  g2_jacobian.theta_right_sensitivity
+  + g2_jacobian.theta_left_sensitivity
+
+common_camber_zero_loading : CalculationScalar
+common_camber_zero_loading =
+  g2_jacobian.gamma_right_sensitivity
+  + g2_jacobian.gamma_left_sensitivity
+
+h006_pair : CasterPair
+h006_pair = CasterPairValue 22.5 (-22.5) 3.75 0.0
+
+h006_variance : CalculationScalar
+h006_variance =
+  propagate_diagonal_covariance
+    (analytic_jacobian h006_pair)
+    (DiagonalCovarianceValue 25.0 25.0 0.0625 0.0625)
+
+correlated_three_pair_variance : CalculationScalar
+correlated_three_pair_variance = 1.0 + 0.25 / 3.0
+
+naive_three_pair_variance : CalculationScalar
+naive_three_pair_variance = (1.0 + 0.25) / 3.0
+
+checks_pass : Bool
+checks_pass =
+  near g2_estimate 5.568798743106686 0.0000000001
+  `both` near g2_odd_component (-1.0) 0.0000000001
+  `both` near g2_even_component 1.5 0.0000000001
+  `both` near
+    g2_jacobian.theta_right_sensitivity
+    (-0.2662274831764701) 0.0000000001
+  `both` near
+    g2_jacobian.theta_left_sensitivity
+    0.2662274831764701 0.0000000001
+  `both` near
+    g2_jacobian.gamma_right_sensitivity
+    (-2.784399371553343) 0.0000000001
+  `both` near
+    g2_jacobian.gamma_left_sensitivity
+    2.784399371553343 0.0000000001
+  `both` near
+    (finite_difference_theta_right g2_pair 0.00001)
+    g2_jacobian.theta_right_sensitivity 0.00000001
+  `both` near g2_stress_interval.lower_edge
+    3.778894920165921 0.0000000001
+  `both` near g2_stress_interval.upper_edge
+    10.735418793944593 0.0000000001
+  `both` near (sqrt h006_variance) 0.863804278906 0.0000000001
+  `both` near common_steering_zero_loading 0.0 0.0000000001
+  `both` near common_camber_zero_loading 0.0 0.0000000001
+  `both` (naive_three_pair_variance < correlated_three_pair_variance)
+  `both` not (resampling_plan_is_valid designed steering_position 7 False False False)
+  `both` not (resampling_plan_is_valid clustered sweep 2 True True True)
+  `both` resampling_plan_is_valid clustered sweep 2 False True True
+  `both` not (resampling_plan_is_valid clustered sweep 2 False False True)
+
+status_text : Bool → Text
+status_text True = "PASS"
+status_text False = "FAIL"
+
+main : IO ()
+main = do
+  putStrLn "receipt_version\tcaster-uncertainty-v1"
+  putStrLn "implementation\tIdriç"
+  putStrLn "calculation_role\tregression_oracle"
+  putStrLn "numeric_carrier\tbinary64_reference"
+  putStrLn ("status\t" ++ status_text checks_pass)
+  putStrLn "case_id\tg2-passenger-half-turn"
+  putStrLn "theta_source_kind\tmanual_17.4_to_1_nominal_conversion"
+  putStrLn ("caster_magnitude_deg\t" ++ show g2_estimate)
+  putStrLn ("odd_camber_component_deg\t" ++ show g2_odd_component)
+  putStrLn ("even_camber_component_deg\t" ++ show g2_even_component)
+  putStrLn
+    ("jacobian.theta_right_deg\t" ++
+      show g2_jacobian.theta_right_sensitivity)
+  putStrLn
+    ("jacobian.theta_left_deg\t" ++
+      show g2_jacobian.theta_left_sensitivity)
+  putStrLn
+    ("jacobian.gamma_right_deg\t" ++
+      show g2_jacobian.gamma_right_sensitivity)
+  putStrLn
+    ("jacobian.gamma_left_deg\t" ++
+      show g2_jacobian.gamma_left_sensitivity)
+  putStrLn "error_bar_status\tnot_computed"
+  putStrLn
+    "bounds_status\thistorical_stress_test_not_measurement_uncertainty"
+  putStrLn
+    ("linear_interval_deg\t" ++
+      show (g2_estimate - g2_linear_radius) ++ "," ++
+      show (g2_estimate + g2_linear_radius))
+  putStrLn
+    ("nonlinear_interval_deg\t" ++
+      show g2_stress_interval.lower_edge ++ "," ++
+      show g2_stress_interval.upper_edge)
+  putStrLn
+    ("h006_propagated_standard_deviation_deg\t" ++ show (sqrt h006_variance))
+  putStrLn "h006_error_bar_status\tillustrative_only_not_error_bar"
+  putStrLn
+    ("three_pair_correlated_variance\t" ++
+      show correlated_three_pair_variance)
+  putStrLn
+    ("three_pair_naive_variance\t" ++ show naive_three_pair_variance)
+  putStrLn "designed_steering_positions_bootstrap\tREJECTED"
+  putStrLn "bootstrap_explicit_error_overlap\tREJECTED"
+  putStrLn "odd_even_pair_preservation\tREQUIRED"
+  putStrLn "split_odd_even_pair\tREJECTED"

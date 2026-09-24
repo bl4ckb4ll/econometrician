@@ -1,0 +1,5 @@
+sampling_structure	resampling_unit	group_id	pair_id	pair_role	covered_effects	provenance
+clustered	sweep	sweep_1	half_turn	plus	theta_right_assumption	two illustrative sweeps
+clustered	sweep	sweep_1	half_turn	minus	theta_right_assumption	two illustrative sweeps
+clustered	sweep	sweep_2	half_turn	plus	theta_right_assumption	two illustrative sweeps
+clustered	sweep	sweep_2	half_turn	minus	theta_right_assumption	two illustrative sweeps
