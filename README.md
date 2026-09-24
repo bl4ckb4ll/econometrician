@@ -129,3 +129,9 @@ inverse conditioning, nuisance effects, input error, correlated observations,
 and geometric curvature. Cross-linked with ASE, Fulton, and Coxeter. No new
 runtime method, general-purpose bootstrap, or measured truck calibration is
 claimed.
+
+[Measurement-induced uncertainty in survey and choice data](notes/measurement-induced-uncertainty.md)
+records the Danilov/Lambert-Mogiliansky measurement-theory argument that an
+elicitation procedure can change the state being measured, and keeps that
+structural uncertainty separate from arithmetic precision. It is a research
+note, not an implemented survey model.
