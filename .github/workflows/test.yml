@@ -23,3 +23,56 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
       - name: Run tests
         run: python3 -m unittest -v
+
+
+  low-precision-jacobian:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact event head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Record exact head
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          echo "expected=$EXPECTED_HEAD"
+          echo "actual=$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+
+      - name: Check out pinned ICK numeric types
+        uses: actions/checkout@v4
+        with:
+          repository: dilapidated-shed/ick
+          ref: 90c003e042fa967872ed3408c25c55ec59315b9b
+          path: _ick
+
+      - name: Run real Jacobian residual sweep
+        run: |
+          set -euxo pipefail
+          cc -std=c11 -O2 -Wall -Wextra \
+            -I_ick/ick/include \
+            notes/dakota-alignment-benchmark/diagnostics/low_precision_jacobian.c \
+            -o /tmp/low-precision-jacobian
+          /tmp/low-precision-jacobian \
+            notes/dakota-alignment-benchmark/data/candidate_large_jacobian.csv \
+            | tee /tmp/low-precision-jacobian.txt
+          grep -qx 'report_complete' /tmp/low-precision-jacobian.txt
+          {
+            echo '### Low-precision Jacobian residuals'
+            echo
+            echo 'All arithmetic in the matrix multiply/solve is binary32 after storage decode.'
+            echo 'Residual magnitude is diagnostic only.'
+            echo
+            echo '```text'
+            grep -E '^(summary|diagnostic|report_complete)' \
+              /tmp/low-precision-jacobian.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload full residual report
+        uses: actions/upload-artifact@v4
+        with:
+          name: low-precision-jacobian-residuals
+          path: /tmp/low-precision-jacobian.txt

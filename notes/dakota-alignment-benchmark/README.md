@@ -58,6 +58,7 @@ The record contains ordinary Jacobian ideas, a sweep second derivative, and the 
 15. **Regression and invariant tests** — `tests/`, `run_checks.sh`, `test_receipt_public.txt`, and `reports/regression_tests.md`.
 16. **Downstream map** — `reports/downstream_map.md`.
 17. **Required future measurements** — `reports/future_measurements.md`.
+18. **Low-precision Jacobian residual diagnostic** — `diagnostics/low_precision_jacobian.c` and `reports/low_precision_jacobian.md`; exercises the real 14×26 matrix and its 14×6 coefficient block through Float16, E4M3, E5M2, E3M2, and signed-magnitude E5M3 storage, with binary32 matrix arithmetic after decode.
 
 Additional requested phases are covered by `reports/sequential_inference_and_system_identification.md` and `reports/evidence_findings.md`.
 
@@ -88,6 +89,7 @@ The package is suitable now for:
 - uncertainty-representation experiments;
 - rank/conditioning/nullspace examples;
 - checked Jacobian software infrastructure;
+- compact-storage / binary32-computation residual experiments on the existing candidate Jacobian;
 - symbolic epsilon design experiments with explicit algebra choice;
 - sequential-identification design.
 
