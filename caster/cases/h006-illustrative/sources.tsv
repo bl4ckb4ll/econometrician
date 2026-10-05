@@ -1,0 +1,2 @@
+source_id	kind	covered_effects	provenance	empirical_status
+h006_assumed_independent_inputs	joint_covariance	theta_right_assumption;theta_left_assumption;gamma_right_assumption;gamma_left_assumption	Historical H-006 assumed 5 deg angle and 0.25 deg camber standard deviations	illustrative_assumption_not_measured

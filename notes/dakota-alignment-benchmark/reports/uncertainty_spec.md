@@ -2,6 +2,14 @@
 
 The benchmark keeps uncertainty kinds distinct. `src/dakota_benchmark/uncertainty.py` implements the first-order containers; it does not coerce them into one scalar error bar.
 
+The complete pre-fit registry is
+[`caster_error_source_census.tsv`](../data/caster_error_source_census.tsv).
+Every source selected for a calculation
+must finish with exactly one disposition: `propagated`,
+`cancelled_first_order`, `retained_symbolically`, `branched`, or
+`rejected_as_incompatible`. Cancellation never authorizes deletion of the
+source record.
+
 ## Numerical stochastic uncertainty
 
 Use a covariance only when a numerical stochastic interpretation is justified. The old script's `sigma_gamma=0.25°` and `sigma_alpha=15°` are **illustrative assumptions explicitly labeled as such in the source**, not empirical Dakota tolerances. They are retained as model-history evidence, not promoted into the benchmark's measured covariance.
@@ -60,3 +68,41 @@ Forward propagation returns separate components:
 - model-uncertainty notes.
 
 They are not collapsed into a single `±sigma` by the library.
+
+## Nested neighborhoods
+
+`(p)`, `((p))`, and `(((p)))` denote nested neighborhoods
+$N_1(p) \subseteq N_2(p) \subseteq N_3(p)$. They need not be symmetric, centered,
+probabilistic, or numerically commensurate. Exact forward images preserve the
+nesting. A local Jacobian maps a centered ball to an ellipsoid (or a
+lower-dimensional image), but that special case does not redefine every
+uncertainty source as a ball. See
+[`geometric_uncertainty_pushforward.md`](geometric_uncertainty_pushforward.md)
+for the sphere, rotation, finite set, and tangent-map model.
+
+## Audited final-bar path
+
+`build_covariance_receipt` is the stricter path for a reported numerical error
+bar. It requires:
+
+- a Jacobian with named inputs/outputs and units;
+- covariance labels in exactly the same order as the Jacobian inputs;
+- a stable source ID and provenance for every contribution;
+- an explicit independence assertion before separate covariance sources are
+  added;
+- non-overlapping atomic effect IDs, so one physical uncertainty is not entered
+  twice under different names.
+
+Shared systematics enter through one latent loading/covariance block. The
+receipt retains every propagated contribution and the total rather than only a
+final square root.
+
+`nonlinear_box_receipt` compares the local `|J|r` interval with direct nonlinear
+evaluation. It reports asymmetric lower/upper deviations. A corner envelope is
+labeled a complete box interval only when the caller separately establishes
+that the extrema occur at corners; otherwise it remains a diagnostic sample.
+
+`require_compatible_observations` rejects estimates assembled across different
+generations, adjustment states, sides, sweeps, or approach directions.
+`audit_resampling_plan` rejects designed steering positions as IID units and
+refuses a bootstrap effect that is already covered by an explicit error source.

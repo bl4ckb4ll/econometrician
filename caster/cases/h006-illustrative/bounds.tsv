@@ -1,0 +1,5 @@
+input_label	radius	source_kind	provenance
+theta_right_deg	5.0	historical_stress_test_not_measurement_uncertainty	H-006 assumed angle scale, retained only to compare linear and nonlinear propagation
+theta_left_deg	5.0	historical_stress_test_not_measurement_uncertainty	H-006 assumed angle scale, retained only to compare linear and nonlinear propagation
+gamma_right_deg	0.0	historical_stress_test_not_measurement_uncertainty	fixed for the nonlinear angle-only comparison
+gamma_left_deg	0.0	historical_stress_test_not_measurement_uncertainty	fixed for the nonlinear angle-only comparison

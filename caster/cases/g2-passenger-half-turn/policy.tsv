@@ -1,0 +1,5 @@
+key	value
+case_id	g2-passenger-half-turn
+estimate_kind	conditional_nominal_steering_model
+unresolved_effects	manual_ratio_to_individual_inside_outside_wheel_mapping;gauge_calibration;setup_hysteresis;cam_state_model
+independence_assertion	

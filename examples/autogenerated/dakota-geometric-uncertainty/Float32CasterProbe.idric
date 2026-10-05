@@ -1,0 +1,10 @@
+module Float32CasterProbe
+
+-- This file is intentionally the smallest probe of the requested physical
+-- numeric boundary.  It must not be repaired by replacing Float32 with Double.
+
+physical_sine : Float32 → Float32
+physical_sine angle = sin angle
+
+main : IO ()
+main = putStrLn "Float32 trigonometric carrier is available"

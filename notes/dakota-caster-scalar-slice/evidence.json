@@ -1,0 +1,83 @@
+{
+  "slice_id": "sep10-passenger-half-turn",
+  "vehicle": "2005 Dodge Dakota",
+  "generation": "G2",
+  "selected_reason": "timestamped same-generation passenger half-turn pair with unambiguous at-time steering labels",
+  "side": "passenger",
+  "raw_observations": [
+    {
+      "evidence_id": "E-026",
+      "sequence": 102,
+      "datetime_utc": "2026-09-10T16:50:13Z",
+      "category": "observation",
+      "quantity": "camber_reading",
+      "raw_value_deg": 0.5,
+      "raw_sign": "positive",
+      "steering_position": "0.5 turn right",
+      "steering_wheel_turns": 0.5,
+      "provenance": "user verbal reading at measurement time; timestamped recovered prior-conversation evidence",
+      "source_artifact": "conversation context recovered into evidence_ledger.csv",
+      "source_uncertainty": "Instrument/calibration/actual road-wheel angle not numerically established."
+    },
+    {
+      "evidence_id": "E-028",
+      "sequence": 104,
+      "datetime_utc": "2026-09-10T16:59:33Z",
+      "category": "observation",
+      "quantity": "camber_reading",
+      "raw_value_deg": 2.5,
+      "raw_sign": "positive",
+      "steering_position": "0.5 turn left",
+      "steering_wheel_turns": -0.5,
+      "provenance": "user verbal reading at measurement time; timestamped recovered prior-conversation evidence",
+      "source_artifact": "conversation context recovered into evidence_ledger.csv",
+      "source_uncertainty": "Instrument/calibration/actual road-wheel angle not numerically established."
+    }
+  ],
+  "metadata": {
+    "steering_sign": "right positive; left negative",
+    "camber_sign": "positive means top of tire outward",
+    "caster_sign": "positive means top of steering axis rearward",
+    "current_cam_rotation_viewpoint": "looking from rear of truck toward front",
+    "current_viewpoint_is_retroactive_historical_claim": false,
+    "historical_cam_rotation_viewpoint_for_selected_pair": "not recovered; no CW/CCW conversion is used in this calculation",
+    "eccentric_cam_position_for_selected_pair": "not recovered; preserve as unresolved rather than infer from nearby notes"
+  },
+  "steering_angle_input": {
+    "kind": "nominal model input, not direct observation",
+    "overall_ratio": 17.4,
+    "formula": "theta_deg = 360 * steering_wheel_turns / 17.4",
+    "right_nominal_deg": 10.344827586206897,
+    "left_nominal_deg": -10.344827586206897,
+    "actual_road_wheel_angles_status": "not measured numerically in recovered Sep10 record",
+    "source": "2005_dakota_caster_sweep_reference.pdf / E-073"
+  },
+  "historical_comparison": {
+    "source": "the-twin-pines/ASE issue #4",
+    "reported_for_passenger_symmetric_pairs": "roughly 5-6 deg from the better half-turn / lock comparisons",
+    "reported_all_data_robust_fit_deg": "5.4-5.5",
+    "comparison_rule": "primary agreement check is against the symmetric-pair historical range, not the separate all-data robust fit",
+    "direction_label_discrepancy": "ASE issue #4 labels the passenger half-turn values in the opposite left/right direction from the timestamped E-026/E-028 sequence: issue #4 has about +0.5 deg at half-left and +2.25 to +2.75 deg at half-right; timestamped evidence has +0.5 deg at half-right and +2.5 deg at half-left.",
+    "direction_discrepancy_effect": "The symmetric caster magnitude is invariant to swapping the two endpoints, but the signed odd coefficient reverses sign. Therefore magnitude can be compared historically; signed physical caster cannot be inherited from the historical row labels."
+  },
+  "uncertainty_policy": {
+    "do_not_import_as_evidence": {
+      "legacy_sigma_gamma_deg": 0.25,
+      "legacy_sigma_steering_wheel_deg": 15.0,
+      "reason": "the legacy script explicitly labels these illustrative assumptions, not measured tolerances"
+    },
+    "numerical_first_order_sources": [
+      "delta_theta_right_deg",
+      "delta_theta_left_deg",
+      "delta_gamma_right_deg",
+      "delta_gamma_left_deg"
+    ],
+    "automatic_independence_assumption": false,
+    "unresolved_symbolic_epsilons": [
+      "epsilon_setup_hysteresis",
+      "epsilon_gauge_calibration",
+      "epsilon_cam_state_model"
+    ],
+    "epsilon_rule": "each named epsilon is retained symbolically with epsilon^2 = 0 for first-order bookkeeping; no rule for mixed epsilon_i*epsilon_j is assumed"
+  }
+}

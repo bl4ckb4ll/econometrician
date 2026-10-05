@@ -1,0 +1,5 @@
+key	value
+case_id	h006-driver-illustrative
+estimate_kind	illustrative_propagation_not_dakota_confidence_interval
+unresolved_effects	calibration;setup;model
+independence_assertion	one joint diagonal source; no cross-source sum

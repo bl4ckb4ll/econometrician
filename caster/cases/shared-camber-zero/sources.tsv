@@ -1,0 +1,2 @@
+source_id	kind	covered_effects	provenance	empirical_status
+common_camber_zero	shared_systematic	common_camber_zero	Synthetic 0.25 deg common additive gauge zero on both endpoints	analytic_regression_not_measured

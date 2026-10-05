@@ -1,4 +1,4 @@
-# Edriç epsilon specification recovered from the record
+# Idriç epsilon specification recovered from the record
 
 ## What is established
 
@@ -28,7 +28,7 @@ No recovered source settles whether `epsilon_i epsilon_j` for `i != j` vanishes.
 1. `square_free`: `epsilon_i^2=0`, while products of distinct labels can survive. Algebraically this resembles a commutative quotient by each individual square relation.
 2. `first_order_ideal`: every product of two or more epsilon factors vanishes, i.e. the entire epsilon ideal squares to zero.
 
-Any Edriç implementation consuming the benchmark must choose one explicitly or leave the expression uninterpreted.
+Any Idriç implementation consuming the benchmark must choose one explicitly or leave the expression uninterpreted.
 
 ## Boundary with physical curvature
 
