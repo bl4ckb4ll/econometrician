@@ -1,0 +1,35 @@
+0000  48 81 ec 20 00 00 00                   sub rsp, 32 ; aligned frame for RouteControl.main
+0007  48 c7 c0 00 00 00 00                   mov rax, 0 ; erased world token
+000e  48 89 84 24 00 00 00 00                mov [rsp + 0], rax ; actual argument home v0
+0016  48 c7 c0 58 00 00 00                   mov rax, 88
+001d  48 89 84 24 08 00 00 00                mov [rsp + 8], rax ; actual spill for v1
+0025  48 8b 84 24 08 00 00 00                mov rax, [rsp + 8] ; v1
+002d  48 89 84 24 10 00 00 00                mov [rsp + 16], rax ; actual output byte
+0035  48 c7 c0 01 00 00 00                   mov rax, 1 ; SYS_write
+003c  48 c7 c7 01 00 00 00                   mov rdi, 1 ; stdout
+0043  48 8d b4 24 10 00 00 00                lea rsi, [rsp + 16]
+004b  48 c7 c2 01 00 00 00                   mov rdx, 1
+0052  0f 05                                  syscall ; write
+0054  49 c7 c3 01 00 00 00                   mov r11, 1 ; required write count
+005b  4c 39 d8                               cmp rax, r11 ; write returned one byte
+005e  0f 85 1a 00 00 00                      jne process:write_failure
+0064  48 31 c0                               xor rax, rax ; IO unit result
+0067  48 81 c4 20 00 00 00                   add rsp, 32
+006e  48 c7 c7 00 00 00 00                   mov rdi, 0 ; status
+0075  48 c7 c0 3c 00 00 00                   mov rax, 60 ; SYS_exit
+007c  0f 05                                  syscall ; exit
+007e  48 c7 c7 01 00 00 00                   mov rdi, 1 ; write failure status
+0085  48 c7 c0 3c 00 00 00                   mov rax, 60 ; SYS_exit
+008c  0f 05                                  syscall ; exit after write failure
+
+# backend plan
+entry RouteControl.main
+plan scalar_i64 ; compiler one-step names do not imply memory stores
+plan RouteControl.main v1 spill ; actual deterministic stack slot 8
+plan RouteControl.main putChar linux_syscall ; direct write(1, byte, 1); world token eliminated
+fallback RefC ABSENT
+fallback Chez_target ABSENT
+fallback c_compiler ABSENT
+fallback assembler ABSENT
+fallback linker ABSENT
+fallback libc ABSENT

@@ -1,0 +1,22 @@
+test_exact_small_sample_numeric_oracle (test_bootstrap_conformance.BootstrapConformanceTests.test_exact_small_sample_numeric_oracle) ... ok
+test_negative_observations_are_valid_for_a_mean (test_bootstrap_conformance.BootstrapConformanceTests.test_negative_observations_are_valid_for_a_mean) ... ok
+test_refuses_dependent_sampling (test_bootstrap_conformance.BootstrapConformanceTests.test_refuses_dependent_sampling) ... ok
+test_refuses_large_exact_state_space (test_bootstrap_conformance.BootstrapConformanceTests.test_refuses_large_exact_state_space) ... ok
+test_refuses_non_observation_resampling_unit (test_bootstrap_conformance.BootstrapConformanceTests.test_refuses_non_observation_resampling_unit) ... ok
+test_refuses_unimplemented_interval (test_bootstrap_conformance.BootstrapConformanceTests.test_refuses_unimplemented_interval) ... ok
+test_refuses_unstated_iid_assumption (test_bootstrap_conformance.BootstrapConformanceTests.test_refuses_unstated_iid_assumption) ... ok
+test_independence_known_table (test_econometrician.ChiSquareTests.test_independence_known_table) ... ok
+test_mendel_regression_case (test_econometrician.ChiSquareTests.test_mendel_regression_case) ... ok
+test_rejects_bad_probability_vector (test_econometrician.ChiSquareTests.test_rejects_bad_probability_vector) ... ok
+test_rejects_empty_margin (test_econometrician.ChiSquareTests.test_rejects_empty_margin) ... ok
+test_same_proportions_are_independent (test_econometrician.ChiSquareTests.test_same_proportions_are_independent) ... ok
+test_warns_on_sparse_expected_counts (test_econometrician.ChiSquareTests.test_warns_on_sparse_expected_counts) ... ok
+test_basic_interval_accepts_close_numeric_answer (test_wasserman_bootstrap_oracles.WassermanOracleTests.test_basic_interval_accepts_close_numeric_answer) ... ok
+test_basic_interval_rejects_endpoint_formula_error (test_wasserman_bootstrap_oracles.WassermanOracleTests.test_basic_interval_rejects_endpoint_formula_error) ... ok
+test_boolean_claim_is_not_treated_as_number (test_wasserman_bootstrap_oracles.WassermanOracleTests.test_boolean_claim_is_not_treated_as_number) ... ok
+test_full_sweep_requires_every_case_once (test_wasserman_bootstrap_oracles.WassermanOracleTests.test_full_sweep_requires_every_case_once) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.001s
+
+OK

@@ -1,0 +1,8 @@
+Error: While processing type of physical_sine. Undefined name Float32. 
+
+FiniteNumerics:3:17--3:24
+ 1 | module FiniteNumerics
+ 2 |
+ 3 | physical_sine : Float32 → Float32
+                     ^^^^^^^
+

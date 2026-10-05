@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 1013, in <module>
+    main()
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 994, in main
+    compiled = compile_artifact(arguments.artifact, arguments.output, arguments.listing,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 914, in compile_artifact
+    compiled = compile_checked_artifact(artifact)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 892, in compile_checked_artifact
+    functions, entry = make_scalar_plan(artifact)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 887, in make_scalar_plan
+    ExactRangeProof(functions).check(entry)
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 528, in check
+    self.call(entry, [0])
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 520, in call
+    return self.expression(parse_expression(function.body_text), environment, name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 456, in expression
+    value = self.expression(expression.value, environment, where)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 498, in expression
+    return self.call(expression.name, arguments)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 511, in call
+    raise UnsupportedError("unsupported_call", name)
+UnsupportedError: unsupported_call: Prelude.IO.prim__getStr

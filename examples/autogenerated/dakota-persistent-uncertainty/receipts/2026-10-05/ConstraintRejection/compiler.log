@@ -1,0 +1,14 @@
+Error: While processing right hand side of wrong_revision. When unifying:
+    the Nat 2 = the Nat 2
+and:
+    the Nat 1 = the Nat 2
+Mismatch between: 1 and 0.
+
+ConstraintRejection:5:18--5:22
+ 1 | module ConstraintRejection
+ 2 |
+ 3 | -- Expected core rejection: an unequal revision cannot receive Refl.
+ 4 | wrong_revision : (the Number 1) = (the Number 2)
+ 5 | wrong_revision = Refl
+                      ^^^^
+

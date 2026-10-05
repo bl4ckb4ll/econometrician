@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 1013, in <module>
+    main()
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 994, in main
+    compiled = compile_artifact(arguments.artifact, arguments.output, arguments.listing,
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 909, in compile_artifact
+    artifact = parse_checked_artifact(artifact_path)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 200, in parse_checked_artifact
+    return parse_checked_artifact_bytes(path.read_bytes())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6d14aa5b3867/idric-x86/backend/idric_x86.py", line 192, in parse_checked_artifact_bytes
+    raise ArtifactError(code, name)
+ArtifactError: duplicate_definition: Prelude.EqOrd.==
