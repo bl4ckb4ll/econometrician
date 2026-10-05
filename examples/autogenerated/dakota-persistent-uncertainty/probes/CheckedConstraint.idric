@@ -1,0 +1,7 @@
+module CheckedConstraint
+
+same_source : (source : Number) → source = source
+same_source source = Refl
+
+main : IO ()
+main = putChar 'C'

@@ -1,0 +1,88 @@
+name: Persistent Dakota Idric authority
+
+on:
+  push:
+    branches: [dakota-trustworthy-scalar-slice, integration/dakota-persistent-uncertainty]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  persistent-authority:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out exact event head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check out pinned compiler
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: isomorphisms/Idric
+          ref: ef83e1627e0a8b84567ec1f461d3a85c26580019
+          path: _dependencies/compiler
+      - name: Check out pinned direct backend
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: fuego-ironworks/idric-x86-aggressive-backend
+          ref: e185d326df5d63f93c7675cb51fde9a8cb4d3ce5
+          path: _dependencies/backend
+      - name: Check out pinned Grease source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: dilapidated-shed/oils
+          ref: 6d29702a10ea9eb72a43950554dbcd4174d07a89
+          path: _dependencies/grease-source
+      - name: Provision actual Grease runtime
+        # Narrow host bootstrap boundary before Grease is available. These are
+        # existing implementation build commands, never application inference.
+        run: |
+          test "$(git rev-parse HEAD)" = '${{ github.event.pull_request.head.sha || github.sha }}'
+          : "${ANDROID_NDK_LATEST_HOME:?hosted NDK toolchain required; no stock compiler fallback}"
+          export CC="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+          test -x "$CC"
+          "$CC" --version
+          sha256sum "$CC"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreadline-dev
+          cd "$GITHUB_WORKSPACE/_dependencies/grease-source/Python-2.7.13"
+          ./configure --prefix="$RUNNER_TEMP/grease-python2"
+          make -j2
+          ln -s python python2
+          export PATH="$PWD:$PATH"
+          cd "$GITHUB_WORKSPACE/_dependencies/grease-source"
+          build/py.sh minimal
+          ln -s ysh bin/grease
+          "$PWD/bin/grease" -c 'var ready = true; if (ready) { echo "PASS Grease runtime" }'
+          echo "$PWD/Python-2.7.13" >> "$GITHUB_PATH"
+          echo "$PWD/bin" >> "$GITHUB_PATH"
+      - name: Build compiler without RefC support
+        run: |
+          export CC="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+          export DAKOTA_COMPILER_ROOT="$GITHUB_WORKSPACE/_dependencies/compiler"
+          "$DAKOTA_COMPILER_ROOT/_/edric" scheme
+          export PATH="$DAKOTA_COMPILER_ROOT/_/.tools/bin:$PATH"
+          export CHEZ="$DAKOTA_COMPILER_ROOT/_/.tools/bin/scheme"
+          chmod +x "$GITHUB_WORKSPACE/caster/_/make_chez.grease"
+          make -C "$DAKOTA_COMPILER_ROOT/_" bootstrap \
+            SCHEME="$CHEZ" CC="$CC" \
+            MAKE="$GITHUB_WORKSPACE/caster/_/make_chez.grease"
+      - name: Require actual authority with no fallback
+        env:
+          DAKOTA_COMPILER_ROOT: ${{ github.workspace }}/_dependencies/compiler
+          DAKOTA_COMPILER_REVISION: ef83e1627e0a8b84567ec1f461d3a85c26580019
+          DAKOTA_BACKEND_ROOT: ${{ github.workspace }}/_dependencies/backend
+          DAKOTA_BACKEND_REVISION: e185d326df5d63f93c7675cb51fde9a8cb4d3ce5
+          DAKOTA_RECEIPTS: ${{ runner.temp }}/persistent-authority-receipts
+        run: |
+          cd "$RUNNER_TEMP"
+          grease "$GITHUB_WORKSPACE/caster/check_persistent_uncertainty.grease" all --require-authority idric --fallback none
+      - name: Retain stage-specific evidence even when blocked
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: persistent-authority-evidence
+          path: ${{ runner.temp }}/persistent-authority-receipts
+          if-no-files-found: error

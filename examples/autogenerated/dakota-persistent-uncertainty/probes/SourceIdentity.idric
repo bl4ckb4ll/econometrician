@@ -1,0 +1,10 @@
+module SourceIdentity
+
+import Data.Text
+
+-- Real equality of a runtime identifier, not a fresh unknown on each use.
+main : IO ()
+main = do
+  first_source ← getLine
+  second_source ← getLine
+  putChar (if first_source ≟ second_source then 'S' else 'D')

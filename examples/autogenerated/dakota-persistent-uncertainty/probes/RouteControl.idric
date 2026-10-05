@@ -1,0 +1,4 @@
+module RouteControl
+
+main : IO ()
+main = putChar 'X'

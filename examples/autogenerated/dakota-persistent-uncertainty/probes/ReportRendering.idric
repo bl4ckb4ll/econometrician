@@ -1,0 +1,8 @@
+module ReportRendering
+
+import Data.Text
+
+main : IO ()
+main = do
+  source_revision ← getLine
+  putStrLn ("unresolved source revision: " ++ source_revision)

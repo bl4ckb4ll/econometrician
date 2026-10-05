@@ -1,0 +1,18 @@
+module FiniteExpression
+
+import Data.Text
+
+-- Exact finite syntax: the same source's square is not nilpotent.
+data FiniteExpression = Literal Integer
+                      | Source Text
+                      | Product FiniteExpression FiniteExpression
+
+has_finite_product : FiniteExpression → Bool
+has_finite_product (Product left right) = True
+has_finite_product _ = False
+
+main : IO ()
+main = do
+  source_name ← getLine
+  let expression = Product (Source source_name) (Source source_name)
+  putChar (if has_finite_product expression then 'P' else 'R')

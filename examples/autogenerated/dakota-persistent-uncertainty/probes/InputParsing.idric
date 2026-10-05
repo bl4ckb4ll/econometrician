@@ -1,0 +1,14 @@
+module InputParsing
+
+import Data.Text
+
+-- Must inspect runtime input; a closed literal is not acquisition acceptance.
+validate_reading : Text → Maybe Integer
+validate_reading raw = parseInteger raw
+
+main : IO ()
+main = do
+  raw ← getLine
+  case validate_reading raw of
+    Just reading ⇒ putChar 'V'
+    Nothing ⇒ putChar 'R'

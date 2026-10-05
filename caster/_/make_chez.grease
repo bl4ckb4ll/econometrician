@@ -1,0 +1,39 @@
+#!/usr/bin/env grease
+
+# Compiler-bootstrap integration only. The consumer target is direct ELF.
+# The inherited aggregate support target installs unused RefC/GMP support;
+# select the existing C/Chez support targets without changing compiler source.
+set -o errexit
+set -o nounset
+var previous = ''
+var support_directory = false
+var install_requested = false
+var explicit_target = false
+for argument in "$@" {
+  if (previous === '-C' and argument === 'support') {
+    setvar support_directory = true
+  }
+  if (argument === 'install') {
+    setvar install_requested = true
+  }
+  case "$argument" in
+    build|build-*|install*|clean*) setvar explicit_target = true
+      ;;
+  esac
+  setvar previous = argument
+}
+var narrowed = []
+for argument in "$@" {
+  if (support_directory and install_requested and argument === 'install') {
+    for target in install-docs install-racket install-gambit install-js install-c install-chez {
+      call narrowed->append(target)
+    }
+  } else {
+    call narrowed->append(argument)
+  }
+}
+if (support_directory and not explicit_target) {
+  call narrowed->append('build-c')
+  call narrowed->append('build-chez')
+}
+exec /usr/bin/make @narrowed MAKE="$0"

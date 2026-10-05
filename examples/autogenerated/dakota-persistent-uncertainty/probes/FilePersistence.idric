@@ -1,0 +1,12 @@
+module FilePersistence
+
+import Data.Text
+import System.File
+
+-- A target must implement checked results of an ordinary-file operation.
+main : IO ()
+main = do
+  result ← writeFile "probe-record.tsv" "source\tzero-epoch-1\n"
+  case result of
+    Right () ⇒ putChar 'W'
+    Left error ⇒ putChar 'E'

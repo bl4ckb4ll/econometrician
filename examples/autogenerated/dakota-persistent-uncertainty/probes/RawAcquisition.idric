@@ -1,0 +1,8 @@
+module RawAcquisition
+
+-- Keep the smallest external-input action independent of parsing-library
+-- symbol collisions. The effect must survive even when its result is unused.
+main : IO ()
+main = do
+  raw ← getLine
+  putChar 'I'

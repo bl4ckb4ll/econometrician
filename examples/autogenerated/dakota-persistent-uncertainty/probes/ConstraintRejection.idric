@@ -1,0 +1,8 @@
+module ConstraintRejection
+
+-- Expected core rejection: an unequal revision cannot receive Refl.
+wrong_revision : (the Number 1) = (the Number 2)
+wrong_revision = Refl
+
+main : IO ()
+main = putChar 'C'
