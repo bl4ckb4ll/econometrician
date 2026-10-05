@@ -12,6 +12,8 @@ jobs:
   persistent-authority:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      DAKOTA_NDK_REVISION: 29.0.14206865
     steps:
       - name: Check out exact event head
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -40,15 +42,20 @@ jobs:
         # existing implementation build commands, never application inference.
         run: |
           test "$(git rev-parse HEAD)" = '${{ github.event.pull_request.head.sha || github.sha }}'
-          : "${ANDROID_NDK_LATEST_HOME:?hosted NDK toolchain required; no stock compiler fallback}"
-          export CC="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+          mkdir -p "$RUNNER_TEMP/persistent-authority-receipts"
+          printf 'repository_revision\t%s\nstage\tprovisioning\n' "$(git rev-parse HEAD)" > "$RUNNER_TEMP/persistent-authority-receipts/provisioning.tsv"
+          : "${ANDROID_HOME:?hosted NDK toolchain required; no stock compiler fallback}"
+          export CC="$ANDROID_HOME/ndk/$DAKOTA_NDK_REVISION/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
           test -x "$CC"
           "$CC" --version
-          sha256sum "$CC"
+          sha256sum "$CC" | tee -a "$RUNNER_TEMP/persistent-authority-receipts/provisioning.tsv"
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libreadline-dev
           cd "$GITHUB_WORKSPACE/_dependencies/grease-source/Python-2.7.13"
-          ./configure --prefix="$RUNNER_TEMP/grease-python2"
+          CFLAGS='-std=gnu99 -Wno-implicit-function-declaration -Wno-int-conversion' ./configure --prefix="$RUNNER_TEMP/grease-python2"
+          # Use the pinned release's generated parser until its Python 2
+          # interpreter exists. Checkout timestamps otherwise trigger Python 3.
+          make touch
           make -j2
           ln -s python python2
           export PATH="$PWD:$PATH"
@@ -56,12 +63,13 @@ jobs:
           build/py.sh minimal
           ln -s ysh bin/grease
           "$PWD/bin/grease" -c 'var ready = true; if (ready) { echo "PASS Grease runtime" }'
+          printf 'grease_provisioning\tPASS\n' >> "$RUNNER_TEMP/persistent-authority-receipts/provisioning.tsv"
           echo "$PWD/Python-2.7.13" >> "$GITHUB_PATH"
           echo "$PWD/bin" >> "$GITHUB_PATH"
       - name: Build compiler without RefC support
         run: |
           export PATH="/usr/local/bin:/usr/bin:/bin:$GITHUB_WORKSPACE/_dependencies/grease-source/bin:$GITHUB_WORKSPACE/_dependencies/grease-source/Python-2.7.13"
-          export CC="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+          export CC="$ANDROID_HOME/ndk/$DAKOTA_NDK_REVISION/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
           export DAKOTA_COMPILER_ROOT="$GITHUB_WORKSPACE/_dependencies/compiler"
           "$DAKOTA_COMPILER_ROOT/_/edric" scheme
           export PATH="$DAKOTA_COMPILER_ROOT/_/.tools/bin:$PATH"

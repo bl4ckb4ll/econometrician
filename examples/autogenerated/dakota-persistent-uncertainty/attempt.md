@@ -221,3 +221,15 @@ Grease gate, narrow compiler-build selector, versioned replay input and mandator
 exact-head workflow wiring. The workflow is configured on this draft; a
 configuration is not an executed hosted receipt. Source acquisition through
 the authoritative persistent Dakota result remains BLOCKED and U2 is incomplete.
+
+The reconciled draft was published by a non-forced GitHub ref update at
+`14bf8a9152ee009fb9e911dcf1733ea37744c026`. Its eight local command forms were
+rerun from an unrelated directory with the same explicit pins; see
+[`published-head-receipt.md`](published-head-receipt.md). The compact diagnostic
+also passed its hosted exact-head check. The first hosted authority run
+[37376225940](https://github.com/bl4ckb4ll/econometrician/actions/runs/37376225940)
+failed before capability execution: CPython 2 regeneration invoked Python 3.
+That failure is infrastructure evidence, not a target invariant rejection.
+The follow-up workflow uses the pinned release's generated parser via its
+existing `make touch` target, declares a fixed hosted NDK revision, and retains
+provisioning-stage receipts even before the compiler/authority steps exist.
