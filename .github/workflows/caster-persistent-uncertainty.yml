@@ -60,6 +60,7 @@ jobs:
           echo "$PWD/bin" >> "$GITHUB_PATH"
       - name: Build compiler without RefC support
         run: |
+          export PATH="/usr/local/bin:/usr/bin:/bin:$GITHUB_WORKSPACE/_dependencies/grease-source/bin:$GITHUB_WORKSPACE/_dependencies/grease-source/Python-2.7.13"
           export CC="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
           export DAKOTA_COMPILER_ROOT="$GITHUB_WORKSPACE/_dependencies/compiler"
           "$DAKOTA_COMPILER_ROOT/_/edric" scheme
@@ -77,6 +78,7 @@ jobs:
           DAKOTA_BACKEND_REVISION: e185d326df5d63f93c7675cb51fde9a8cb4d3ce5
           DAKOTA_RECEIPTS: ${{ runner.temp }}/persistent-authority-receipts
         run: |
+          export PATH="/usr/local/bin:/usr/bin:/bin:$GITHUB_WORKSPACE/_dependencies/grease-source/bin:$GITHUB_WORKSPACE/_dependencies/grease-source/Python-2.7.13"
           cd "$RUNNER_TEMP"
           grease "$GITHUB_WORKSPACE/caster/check_persistent_uncertainty.grease" all --require-authority idric --fallback none
       - name: Retain stage-specific evidence even when blocked
