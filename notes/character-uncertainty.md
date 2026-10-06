@@ -12,9 +12,9 @@ Status: design note, 2026-10-06. This revives an older character-uncertainty ide
 
 An observed character need not be treated as an exact categorical value. When data support it, the target is something like
 
-[
+$$
 P(\text{intended character}\mid\text{observation},\text{visual context},\text{input geometry},\text{user/device context}).
-]
+$$
 
 Before calibration, keep candidate sets, distances, ranks, and provenance as such. Do not manufacture probabilities from adjacency.
 
