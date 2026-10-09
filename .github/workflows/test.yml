@@ -27,6 +27,7 @@ jobs:
 
   low-precision-jacobian:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - name: Check out exact event head
         uses: actions/checkout@v4
@@ -48,13 +49,16 @@ jobs:
           ref: 90c003e042fa967872ed3408c25c55ec59315b9b
           path: _ick
 
+      - name: Provision the qualified native ICK compiler
+        id: ick
+        uses: isomorphisms/ai-ci/ick-host@c789bb621ca9c5fb1a9bec07eb95cc670efb65f7
+
+      - name: Build the diagnostic through ICK
+        run: make -f notes/dakota-alignment-benchmark/diagnostics/Makefile build ICK_CC="${{ steps.ick.outputs.compiler }}"
+
       - name: Run real Jacobian residual sweep
         run: |
           set -euxo pipefail
-          cc -std=c11 -O2 -Wall -Wextra \
-            -I_ick/ick/include \
-            notes/dakota-alignment-benchmark/diagnostics/low_precision_jacobian.c \
-            -o /tmp/low-precision-jacobian
           /tmp/low-precision-jacobian \
             notes/dakota-alignment-benchmark/data/candidate_large_jacobian.csv \
             | tee /tmp/low-precision-jacobian.txt
