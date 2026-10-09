@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out exact event head
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Record exact head
@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Check out exact event head
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -43,7 +43,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
 
       - name: Check out pinned ICK numeric types
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: dilapidated-shed/ick
           ref: 90c003e042fa967872ed3408c25c55ec59315b9b
@@ -76,7 +76,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload full residual report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: low-precision-jacobian-residuals
           path: /tmp/low-precision-jacobian.txt
