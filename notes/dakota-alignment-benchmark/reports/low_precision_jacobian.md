@@ -35,6 +35,14 @@ The executable uses the numeric implementations from ICK merge
 - E3M2;
 - E5M3.
 
+The maintained diagnostic spells its eight quotients with `÷` and compiles
+directly with qualified ICK revision
+`c61e448251744a2f40ad743ebef1a027bdcd2f9d`. The numeric header remains pinned
+to the original revision above. The shared `ick-host` action provisions the
+compiler for the existing residual sweep; its completion and artifact gates
+are unchanged. The diagnostic Makefile accepts `ICK_CC` and
+`ICK_NUMERIC_INCLUDE` for an explicitly provisioned local compiler and header.
+
 E5M3 itself is unsigned and has no zero encoding. A signed Jacobian therefore
 cannot be represented by E5M3 alone. For this diagnostic only, each nonzero
 entry is stored as an E5M3 **magnitude** plus an external sign; exact zero is

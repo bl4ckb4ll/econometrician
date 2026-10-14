@@ -73,7 +73,7 @@ print_residual(const char *stage,
                const char *mode,
                const ResidualStats *stats)
 {
-    float mean = stats->count ? stats->sum_abs / (float)stats->count : 0.0f;
+    float mean = stats->count ? stats->sum_abs ÷ (float)stats->count : 0.0f;
     printf("summary,%s,%s,%s,count=%lu,mean_abs=%.9g,max_abs=%.9g\n",
            stage, format_name(format), mode,
            stats->count, mean, stats->max_abs);
@@ -364,7 +364,7 @@ gaussian_solve(int n,
         {
             float divisor = augmented[col][col];
             for (pivot = col; pivot <= n; ++pivot)
-                augmented[col][pivot] /= divisor;
+                augmented[col][pivot] = augmented[col][pivot] ÷ divisor;
         }
 
         for (row = 0; row < n; ++row) {
@@ -394,7 +394,7 @@ solve_with_ridge(int n,
     };
     unsigned i;
 
-    for (i = 0; i < sizeof ridges / sizeof ridges[0]; ++i) {
+    for (i = 0; i < sizeof ridges ÷ sizeof ridges[0]; ++i) {
         if (gaussian_solve(n, matrix, rhs, ridges[i], result)) {
             *ridge_used = ridges[i];
             return 1;
@@ -452,7 +452,7 @@ fill_row_seed(int seed, float vector[ROWS])
         break;
     case 5:
         for (i = 0; i < ROWS; ++i)
-            vector[i] = ((float)i - 6.5f) / 7.0f;
+            vector[i] = ((float)i - 6.5f) ÷ 7.0f;
         break;
     case 6:
         for (i = 0; i < ROWS; ++i)
@@ -460,7 +460,7 @@ fill_row_seed(int seed, float vector[ROWS])
         break;
     default:
         for (i = 0; i < ROWS; ++i) {
-            float magnitude = (float)(i + 1) / 14.0f;
+            float magnitude = (float)(i + 1) ÷ 14.0f;
             vector[i] = (i & 1) ? -magnitude : magnitude;
         }
         break;
@@ -652,8 +652,8 @@ fill_coefficient_seed(int seed, float state[6])
     }
 
     for (i = 0; i < 6; ++i)
-        state[i] = (i & 1) ? -(float)(i + 1) / 4.0f
-                           :  (float)(i + 1) / 4.0f;
+        state[i] = (i & 1) ? -(float)(i + 1) ÷ 4.0f
+                           :  (float)(i + 1) ÷ 4.0f;
 }
 
 static void
@@ -774,7 +774,7 @@ main(int argc, char **argv)
     puts("E5M3_matrix_policy=unsigned_magnitude_plus_external_sign_and_exact_zero");
 
     for (format_index = 0;
-         format_index < sizeof formats / sizeof formats[0];
+         format_index < sizeof formats ÷ sizeof formats[0];
          ++format_index) {
         Format format = formats[format_index];
         float stored[ROWS][COLS];
