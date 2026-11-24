@@ -1,0 +1,145 @@
+module Main
+
+import Frame.GapOrder
+import Interval.Exact
+import System
+
+original_setup : BladeSlopeSource
+original_setup = BladeSource (SourceId "square") (SourceId "calibration")
+  (SourceId "placement-1") (SourceId "view") (SourceId "cooled-frame")
+
+reset_setup : BladeSlopeSource
+reset_setup = { placement := SourceId "placement-2" } original_setup
+
+base_station : ProjectedStation
+base_station = Station (SourceId "bottom") (Length (whole 0)) (Length (whole 0))
+
+middle_station : ProjectedStation
+middle_station = Station (SourceId "middle") (Length (whole 2)) (Length (whole 3))
+
+leaning_top : ProjectedStation
+leaning_top = Station (SourceId "top") (Length (whole 5)) (Length (over 15 (OnePlus 1)))
+
+bowed_top : ProjectedStation
+bowed_top = Station (SourceId "top") (Length (whole 5)) (Length (whole 1))
+
+lower_pair : station_pair
+lower_pair = registered base_station middle_station
+
+first_sighting : GapObservation
+first_sighting = GapReading (SourceId "initial") original_setup
+  (discerned_order lower_pair larger_at_second)
+
+further_sighting : ProjectedStation → GapObservation
+further_sighting top = GapReading (SourceId "further") original_setup
+  (discerned_order (registered middle_station top) larger_at_first)
+
+-- Independently written table for projected station numbers 0, 2 and 5.
+-- Lean: offsets 0, 3, 15/2 have slopes 3/2 then 3/2.
+-- Bow: offsets 0, 3, 1 have slopes 3/2 then -2/3.
+lean_upper : ExactRational
+lean_upper = over 3 (OnePlus 1)
+
+bow_lower : ExactRational
+bow_lower = over (-2) (OnePlus 2)
+
+named_reading : Text → GapObservation → Bool
+named_reading label reading =
+  case evidence reading of
+    SourceId actual ⇒ label ≟ actual
+
+returned_interval : exact_interval → gap_conditioning → Bool
+returned_interval expected (conditioned (feasible_range range witness) _ _) =
+  interval_equal expected range && contains range witness
+returned_interval _ _ = False
+
+references_lean_contradiction : gap_conditioning → Bool
+references_lean_contradiction (conditioned (excluded_by lower upper) [_, _] []) =
+  named_reading "further" (reading lower) &&
+  named_reading "initial" (reading upper) &&
+  rational_equal lean_upper (threshold lower) &&
+  rational_equal lean_upper (threshold upper)
+references_lean_contradiction _ = False
+
+repeat_keeps_one_bound : gap_conditioning → Bool
+repeat_keeps_one_bound result@(conditioned _ [bound] []) =
+  named_reading "initial" (reading bound) &&
+  returned_interval (below lean_upper excluded) result
+repeat_keeps_one_bound _ = False
+
+remount_is_deferred : gap_conditioning → Bool
+remount_is_deferred result@(conditioned _ [bound] [Deferred pending different_blade_source]) =
+  named_reading "initial" (reading bound) &&
+  named_reading "further" pending &&
+  returned_interval (below lean_upper excluded) result
+remount_is_deferred _ = False
+
+keeps_nonorder_evidence : gap_conditioning → Bool
+keeps_nonorder_evidence
+  (conditioned no_admitted_bounds []
+    [Deferred first difference_not_discerned, Deferred second opening_visibility_only]) =
+  named_reading "hard-to-tell" first && named_reading "daylight" second
+keeps_nonorder_evidence _ = False
+
+keeps_unusable_geometry : gap_conditioning → Bool
+keeps_unusable_geometry
+  (conditioned no_admitted_bounds []
+    [Deferred first station_registration_missing,
+     Deferred second nonpositive_projected_step,
+     Deferred third duplicate_station]) =
+  named_reading "no-registration" first && named_reading "reversed-step" second &&
+  named_reading "same-station" third
+keeps_unusable_geometry _ = False
+
+is_same_identity_conflict : gap_conditioning → Bool
+is_same_identity_conflict (conflicting_evidence_identity (SourceId "initial")) = True
+is_same_identity_conflict _ = False
+
+check : Text → Bool → IO ()
+check label True = putStrLn label
+check label False = do
+  putStrLn ("FAIL " ++ label)
+  exitFailure
+
+main : IO ()
+main = do
+  let run = constrain_signed_blade_slope original_setup
+  let bowed_sighting = further_sighting bowed_top
+  let leaning_sighting = further_sighting leaning_top
+  let initial_slopes = below lean_upper excluded
+  let bowed_slopes = open_interval bow_lower lean_upper
+  check "First sighting keeps slope strictly below 3/2"
+    (returned_interval initial_slopes (run [first_sighting]))
+  check "Repeated evidence keeps its exact range and a single attribution"
+    (repeat_keeps_one_bound (run [first_sighting, first_sighting]))
+  check "A straight profile is excluded at the shared open endpoint 3/2"
+    (references_lean_contradiction (run [first_sighting, leaning_sighting]))
+  check "Reversing evidence order keeps the two named limiting sightings"
+    (references_lean_contradiction (run [leaning_sighting, first_sighting]))
+  check "A bowed profile admits a witnessed range strictly between -2/3 and 3/2"
+    (returned_interval bowed_slopes (run [first_sighting, bowed_sighting]))
+  check "Remount leaves the prior range and retains the new reading with its refusal reason"
+    (remount_is_deferred (run [first_sighting, { source := reset_setup } leaning_sighting]))
+  check "Indistinguishability and daylight remain evidence without a slope bound"
+    (keeps_nonorder_evidence (run
+      [ GapReading (SourceId "hard-to-tell") original_setup (indistinguishable lower_pair),
+        GapReading (SourceId "daylight") original_setup
+          (visibility_only (SourceId "middle") opening_seen) ]))
+  check "Missing registration, reversed step and a repeated station are distinguished"
+    (keeps_unusable_geometry (run
+      [ GapReading (SourceId "no-registration") original_setup
+          (discerned_order (unregistered (SourceId "bottom") (SourceId "middle")) larger_at_second),
+        GapReading (SourceId "reversed-step") original_setup
+          (discerned_order (registered middle_station base_station) larger_at_first),
+        GapReading (SourceId "same-station") original_setup
+          (discerned_order (registered middle_station
+             ({ longitudinal := Length (whole 5) } middle_station)) larger_at_first) ]))
+  check "Changing a record under its existing evidence identity is rejected"
+    (is_same_identity_conflict (run [first_sighting,
+      { report := discerned_order lower_pair larger_at_first } first_sighting]))
+  let fractional_station = Station (SourceId "fractional")
+        (Length (over 3 (OnePlus 1))) (Length (over (-1) (OnePlus 3)))
+  let fractional_reading = GapReading (SourceId "fractional-step") original_setup
+        (discerned_order (registered base_station fractional_station) larger_at_first)
+  check "A projected step of 3/2 and change of -1/4 give a strict lower bound of -1/6"
+    (returned_interval (above (over (-1) (OnePlus 5)) excluded) (run [fractional_reading]))

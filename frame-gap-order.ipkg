@@ -1,0 +1,4 @@
+package frame-gap-order
+version = 0.1.0
+sourcedir = "idric"
+modules = Frame.GapOrder

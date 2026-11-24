@@ -1,0 +1,240 @@
+module Frame.GapOrder
+
+import Data.List
+import Interval.Exact
+import Interval.Product
+import Interval.Reciprocal
+
+public export
+choice source_role one_of
+  tool_role
+  calibration_role
+  placement_role
+  projection_role
+  assembly_role
+  station_role
+  evidence_role
+
+public export
+data SourceIdentity : source_role → Type where
+  SourceId : Text → SourceIdentity role
+
+same_id : SourceIdentity role → SourceIdentity role → Bool
+same_id (SourceId left) (SourceId right) = left ≟ right
+
+public export
+record BladeSlopeSource where
+  constructor BladeSource
+  tool : SourceIdentity tool_role
+  calibration : SourceIdentity calibration_role
+  placement : SourceIdentity placement_role
+  projection : SourceIdentity projection_role
+  assembly : SourceIdentity assembly_role
+
+same_source : BladeSlopeSource → BladeSlopeSource → Bool
+same_source left right =
+  same_id (tool left) (tool right) &&
+  same_id (calibration left) (calibration right) &&
+  same_id (placement left) (placement right) &&
+  same_id (projection left) (projection right) &&
+  same_id (assembly left) (assembly right)
+
+-- The named projection fixes a common basis and unit for both coordinates.
+public export
+data ProjectedLength = Length ExactRational
+
+public export
+record ProjectedStation where
+  constructor Station
+  station : SourceIdentity station_role
+  longitudinal : ProjectedLength
+  lateral : ProjectedLength
+
+same_length : ProjectedLength → ProjectedLength → Bool
+same_length (Length left) (Length right) = rational_equal left right
+
+same_station : ProjectedStation → ProjectedStation → Bool
+same_station left right =
+  same_id (station left) (station right) &&
+  same_length (longitudinal left) (longitudinal right) &&
+  same_length (lateral left) (lateral right)
+
+public export
+choice station_pair one_of
+  registered ProjectedStation ProjectedStation
+  unregistered (SourceIdentity station_role) (SourceIdentity station_role)
+
+same_pair : station_pair → station_pair → Bool
+same_pair (registered first second) (registered other_first other_second) =
+  same_station first other_first && same_station second other_second
+same_pair (unregistered first second) (unregistered other_first other_second) =
+  same_id first other_first && same_id second other_second
+same_pair _ _ = False
+
+public export
+choice observed_order one_of
+  larger_at_first
+  larger_at_second
+
+same_order : observed_order → observed_order → Bool
+same_order larger_at_first larger_at_first = True
+same_order larger_at_second larger_at_second = True
+same_order _ _ = False
+
+public export
+choice opening_visibility one_of
+  opening_seen
+  opening_not_seen
+  unreadable
+
+same_visibility : opening_visibility → opening_visibility → Bool
+same_visibility opening_seen opening_seen = True
+same_visibility opening_not_seen opening_not_seen = True
+same_visibility unreadable unreadable = True
+same_visibility _ _ = False
+
+public export
+choice gap_report one_of
+  discerned_order station_pair observed_order
+  indistinguishable station_pair
+  visibility_only (SourceIdentity station_role) opening_visibility
+
+same_report : gap_report → gap_report → Bool
+same_report (discerned_order pair order) (discerned_order other_pair other_order) =
+  same_pair pair other_pair && same_order order other_order
+same_report (indistinguishable pair) (indistinguishable other_pair) = same_pair pair other_pair
+same_report (visibility_only station_id visibility) (visibility_only other_id other_visibility) =
+  same_id station_id other_id && same_visibility visibility other_visibility
+same_report _ _ = False
+
+public export
+record GapObservation where
+  constructor GapReading
+  evidence : SourceIdentity evidence_role
+  source : BladeSlopeSource
+  report : gap_report
+
+public export
+choice slope_bound_side one_of
+  slope_above
+  slope_below
+
+public export
+record SourcedSlopeBound where
+  constructor SlopeBound
+  reading : GapObservation
+  side : slope_bound_side
+  threshold : ExactRational
+
+public export
+choice deferred_reason one_of
+  different_blade_source
+  station_registration_missing
+  duplicate_station
+  nonpositive_projected_step
+  difference_not_discerned
+  opening_visibility_only
+
+public export
+record DeferredReading where
+  constructor Deferred
+  original : GapObservation
+  reason : deferred_reason
+
+length_difference : ProjectedLength → ProjectedLength → ExactRational
+length_difference (Length second) (Length first) = subtract_rational second first
+
+admit_registered_order : GapObservation → ProjectedStation → ProjectedStation →
+                         observed_order → Either DeferredReading SourcedSlopeBound
+admit_registered_order reading first second direction =
+  let step = length_difference (longitudinal second) (longitudinal first)
+      change = length_difference (lateral second) (lateral first)
+      side = case direction of
+        larger_at_first ⇒ slope_above
+        larger_at_second ⇒ slope_below
+  in if same_id (station first) (station second)
+        then Left (Deferred reading duplicate_station)
+        else if rational_less (whole 0) step
+                then case reciprocal_rational step of
+                  Nothing ⇒ Left (Deferred reading nonpositive_projected_step)
+                  Just scale ⇒ Right (SlopeBound reading side (multiply_rational change scale))
+                else Left (Deferred reading nonpositive_projected_step)
+
+admit_order : BladeSlopeSource → GapObservation → Either DeferredReading SourcedSlopeBound
+admit_order target reading =
+  if not (same_source target (source reading))
+     then Left (Deferred reading different_blade_source)
+     else case report reading of
+       discerned_order (registered first second) direction ⇒
+         admit_registered_order reading first second direction
+       discerned_order (unregistered _ _) _ ⇒ Left (Deferred reading station_registration_missing)
+       indistinguishable _ ⇒ Left (Deferred reading difference_not_discerned)
+       visibility_only _ _ ⇒ Left (Deferred reading opening_visibility_only)
+
+same_reading : GapObservation → GapObservation → Bool
+same_reading left right = same_source (source left) (source right) &&
+                          same_report (report left) (report right)
+
+collect : BladeSlopeSource → List GapObservation → List GapObservation →
+          Either (SourceIdentity evidence_role) (List SourcedSlopeBound, List DeferredReading)
+collect target seen [] = Right ([], [])
+collect target seen (reading :: rest) =
+  case find (\earlier ⇒ same_id (evidence earlier) (evidence reading)) seen of
+    Just earlier ⇒ if same_reading earlier reading
+                      then collect target seen rest
+                      else Left (evidence reading)
+    Nothing ⇒ case collect target (reading :: seen) rest of
+      Left conflict ⇒ Left conflict
+      Right (bounds, deferred) ⇒ case admit_order target reading of
+        Left pending ⇒ Right (bounds, pending :: deferred)
+        Right bound ⇒ Right (bound :: bounds, deferred)
+
+public export
+choice conditioned_slopes one_of
+  no_admitted_bounds
+  feasible_range exact_interval ExactRational
+  excluded_by SourcedSlopeBound SourcedSlopeBound
+
+public export
+choice gap_conditioning one_of
+  conditioned conditioned_slopes (List SourcedSlopeBound) (List DeferredReading)
+  conflicting_evidence_identity (SourceIdentity evidence_role)
+
+stronger : (ExactRational → ExactRational → Bool) →
+           Maybe SourcedSlopeBound → SourcedSlopeBound → Maybe SourcedSlopeBound
+stronger precedes Nothing candidate = Just candidate
+stronger precedes (Just current) candidate =
+  if precedes (threshold current) (threshold candidate)
+     then Just candidate
+     else Just current
+
+limits : List SourcedSlopeBound → (Maybe SourcedSlopeBound, Maybe SourcedSlopeBound)
+limits [] = (Nothing, Nothing)
+limits (bound :: rest) =
+  let (lower, upper) = limits rest
+  in case side bound of
+    slope_above ⇒ (stronger rational_less lower bound, upper)
+    slope_below ⇒ (lower, stronger (flip rational_less) upper bound)
+
+range_from : Maybe SourcedSlopeBound → Maybe SourcedSlopeBound → conditioned_slopes
+range_from Nothing Nothing = no_admitted_bounds
+range_from (Just lower) Nothing =
+  feasible_range (above (threshold lower) excluded) (add_rational (threshold lower) (whole 1))
+range_from Nothing (Just upper) =
+  feasible_range (below (threshold upper) excluded) (subtract_rational (threshold upper) (whole 1))
+range_from (Just lower) (Just upper) =
+  let range = intersect_interval (above (threshold lower) excluded) (below (threshold upper) excluded)
+  in case range of
+    no_points ⇒ excluded_by lower upper
+    points_between _ ⇒
+      feasible_range range
+        (multiply_rational (over 1 (OnePlus 1)) (add_rational (threshold lower) (threshold upper)))
+
+export
+constrain_signed_blade_slope : BladeSlopeSource → List GapObservation → gap_conditioning
+constrain_signed_blade_slope target readings =
+  case collect target [] readings of
+    Left conflict ⇒ conflicting_evidence_identity conflict
+    Right (bounds, deferred) ⇒
+      let (lower, upper) = limits bounds
+      in conditioned (range_from lower upper) bounds deferred
